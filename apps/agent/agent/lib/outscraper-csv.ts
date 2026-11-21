@@ -52,7 +52,10 @@ function normalizeDomain(input: string): string {
 	const trimmed = input.trim().toLowerCase();
 	if (!trimmed) return "";
 	try {
-		const url = new URL(/^[a-z][a-z0-9+.-]*:\/\//.test(trimmed) ? trimmed : `https://${trimmed}`);
+		const candidate = /^[a-z][a-z0-9+.-]*:\/\//.test(trimmed)
+			? trimmed
+			: `https://${trimmed}`;
+		const url = new URL(candidate);
 		const host = url.hostname.replace(/^www\./, "");
 		return /^[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(host) ? host : "";
 	} catch {
@@ -96,13 +99,18 @@ export function parseCsv(input: string): OutscraperRow[] {
 	const headers = headerRow.map((header) =>
 		header.replace(/^\uFEFF/, "").trim().toLowerCase(),
 	);
-	if (headers.some((header) => !header)) throw new Error("CSV inválido: hay encabezados vacíos.");
+	if (headers.some((header) => !header)) {
+		throw new Error("CSV inválido: hay encabezados vacíos.");
+	}
 	return rows.slice(1).map((cells) =>
 		Object.fromEntries(headers.map((header, index) => [header, cells[index] ?? ""])),
 	);
 }
 
-function scoreLead(row: OutscraperRow, domain: string): { score: number; reasons: string[] } {
+function scoreLead(
+	row: OutscraperRow,
+	domain: string,
+): { score: number; reasons: string[] } {
 	const reasons: string[] = [];
 	let score = 0;
 	if (domain) {
@@ -136,7 +144,11 @@ function scoreLead(row: OutscraperRow, domain: string): { score: number; reasons
 
 function identityKeys(row: OutscraperRow, domain: string): string[] {
 	const phone = value(row, "phone").replace(/\D/g, "");
-	const name = value(row, "name").toLocaleLowerCase("es").normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
+	const name = value(row, "name")
+		.toLocaleLowerCase("es")
+		.normalize("NFKD")
+		.replace(/[\u0300-\u036f]/g, "")
+		.replace(/[^a-z0-9]/g, "");
 	return [
 		...(domain ? [`domain:${domain}`] : []),
 		...(phone ? [`phone:${phone}`] : []),
@@ -148,7 +160,10 @@ export function prepareOutscraperLeads(
 	rows: OutscraperRow[],
 	options: { city?: string; limit?: number } = {},
 ): PreparationResult {
-	const limit = Math.min(30, Math.max(1, Math.floor(options.limit ?? 30)));
+	const limit = Math.min(
+		30,
+		Math.max(1, Math.floor(options.limit ?? 30)),
+	);
 	const targetCity = options.city?.trim().toLocaleLowerCase("es") ?? "";
 	const leads: PreparedLead[] = [];
 	const rejected: PreparationResult["rejected"] = [];
@@ -176,7 +191,10 @@ export function prepareOutscraperLeads(
 			return;
 		}
 		if (leads.length >= limit) {
-			rejected.push({ row: index + 2, reason: `Supera el límite de ${limit} prospectos.` });
+			rejected.push({
+				row: index + 2,
+				reason: `Supera el límite de ${limit} prospectos.`,
+			});
 			return;
 		}
 		for (const key of keys) seen.add(key);
@@ -208,8 +226,13 @@ export function toCsv(leads: PreparedLead[]): string {
 	];
 	const escape = (input: string | number | string[]) => {
 		const text = Array.isArray(input) ? input.join("; ") : String(input);
-		const safeText = typeof input === "string" && /^[\t\r ]*[=+\-@]/.test(text) ? "'" + text : text;
-		return /[",\r\n]/.test(safeText) ? '"' + safeText.replace(/"/g, '""') + '"' : safeText;
+		const safeText =
+			typeof input === "string" && /^[\t\r ]*[=+\-@]/.test(text)
+				? "'" + text
+				: text;
+		return /[",\r\n]/.test(safeText)
+			? '"' + safeText.replace(/"/g, '""') + '"'
+			: safeText;
 	};
 	return [
 		headers.join(","),
