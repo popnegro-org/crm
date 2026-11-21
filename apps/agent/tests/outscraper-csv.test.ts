@@ -50,7 +50,7 @@ describe("Outscraper CSV preparation", () => {
 		expect(result.rejected).toHaveLength(2);
 	});
 
-	test("checks every identifier when detecting duplicates", () => {
+	test("checks all strong identifiers and uses name only as fallback", () => {
 		const result = prepareOutscraperLeads([
 			{
 				name: "Estudio Uno",
@@ -76,14 +76,15 @@ describe("Outscraper CSV preparation", () => {
 				phone: "+54 261 400 0002",
 				city: "Mendoza",
 			},
+			{ name: "Consultora", city: "Mendoza" },
+			{ name: "Consultora", city: "Mendoza" },
 		]);
-		expect(result.leads).toHaveLength(1);
+		expect(result.leads).toHaveLength(3);
 		expect(result.duplicates).toHaveLength(3);
 		expect(result.duplicates[0]?.key).toBe("phone:542614000000");
-		expect(result.duplicates[1]?.key).toBe("name:estudiouno");
-		expect(result.duplicates[2]?.key).toBe("domain:uno.example.com");
+		expect(result.duplicates[1]?.key).toBe("domain:uno.example.com");
+		expect(result.duplicates[2]?.key).toBe("name:consultora");
 	});
-
 	test("never emits more than 30 leads", () => {
 		const rows = Array.from({ length: 31 }, (_, i) => ({
 			name: `Negocio ${i}`,
