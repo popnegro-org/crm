@@ -18,7 +18,11 @@ describe("Outscraper CSV preparation", () => {
 				rating: "4.8",
 				reviews: "20",
 			},
-			{ name: "Estudio Uno duplicado", site: "https://estudiouno.com.ar", city: "Mendoza" },
+			{
+				name: "Estudio Uno duplicado",
+				site: "https://estudiouno.com.ar",
+				city: "Mendoza",
+			},
 			{ name: "Negocio remoto", site: "https://remoto.com", city: "Córdoba" },
 			{ name: "", city: "Mendoza" },
 		];
@@ -32,10 +36,30 @@ describe("Outscraper CSV preparation", () => {
 
 	test("checks every identifier when detecting duplicates", () => {
 		const result = prepareOutscraperLeads([
-			{ name: "Estudio Uno", site: "uno.example.com", phone: "+54 261 400 0000", city: "Mendoza" },
-			{ name: "Otro nombre", site: "dos.example.com", phone: "+54 261 400 0000", city: "Mendoza" },
-			{ name: "Estudio Uno", site: "tres.example.com", phone: "+54 261 400 0001", city: "Mendoza" },
-			{ name: "Otra empresa", site: "uno.example.com", phone: "+54 261 400 0002", city: "Mendoza" },
+			{
+				name: "Estudio Uno",
+				site: "uno.example.com",
+				phone: "+54 261 400 0000",
+				city: "Mendoza",
+			},
+			{
+				name: "Otro nombre",
+				site: "dos.example.com",
+				phone: "+54 261 400 0000",
+				city: "Mendoza",
+			},
+			{
+				name: "Estudio Uno",
+				site: "tres.example.com",
+				phone: "+54 261 400 0001",
+				city: "Mendoza",
+			},
+			{
+				name: "Otra empresa",
+				site: "uno.example.com",
+				phone: "+54 261 400 0002",
+				city: "Mendoza",
+			},
 		]);
 		expect(result.leads).toHaveLength(1);
 		expect(result.duplicates).toHaveLength(3);
@@ -57,7 +81,11 @@ describe("Outscraper CSV preparation", () => {
 
 	test("exports stable CSV headers and escapes values", () => {
 		const result = prepareOutscraperLeads([
-			{ name: "Estudio, Uno", site: "estudio.com.ar", city: "Mendoza" },
+			{
+				name: "Estudio, Uno",
+				site: "estudio.com.ar",
+				city: "Mendoza",
+			},
 		]);
 		const csv = toCsv(result.leads);
 		expect(csv).toContain('"Estudio, Uno"');
