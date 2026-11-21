@@ -16,7 +16,8 @@
 		"test": "CRM_TELEMETRY_DISABLED=1 bun test",
 		"eval": "CRM_TELEMETRY_DISABLED=1 eve eval",
 		"lint": "biome check .",
-		"clean": "rm -rf .turbo .eve node_modules"
+		"clean": "rm -rf .turbo .eve node_modules",
+		"leads:prepare": "bun scripts/prepare-outscraper-import.ts"
 	},
 	"dependencies": {
 		"@crm/db": "workspace:*",
