@@ -10,7 +10,7 @@ The initial lead-generation intake uses Outscraper's manual CSV export. It delib
 4. Run from the repository root:
 
 ```sh
-cd apps/api
+cd apps/agent
 bun run leads:prepare -- /absolute/path/to/outscraper.csv /absolute/path/to/leads-prepared.csv Mendoza
 ```
 
@@ -20,7 +20,7 @@ bun run leads:prepare -- /absolute/path/to/outscraper.csv /absolute/path/to/lead
 
 - Maximum 30 prepared businesses per run.
 - Accepts common Outscraper column aliases for name, website, category, location, phone and business email.
-- Normalizes domains and deduplicates by domain, then phone, then business name.
+- Normalizes domains and deduplicates against every available domain, phone and business-name identifier.
 - Filters records to the requested city.
 - Rejects rows without a business name and rows outside the target city.
 - Produces a transparent 0–100 completeness/quality signal with reasons; it is a triage aid, not a prediction of conversion.
