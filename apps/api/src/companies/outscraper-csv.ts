@@ -42,7 +42,9 @@ const aliases: Record<string, string[]> = {
 
 function value(row: OutscraperRow, field: string): string {
 	for (const key of aliases[field] ?? [field]) {
-		const found = Object.entries(row).find(([header]) => header.trim().toLowerCase() === key);
+		const found = Object.entries(row).find(
+			([header]) => header.trim().toLowerCase() === key,
+		);
 		if (found?.[1]?.trim()) return found[1].trim();
 	}
 	return "";
@@ -79,24 +81,49 @@ export function parseCsv(input: string): OutscraperRow[] {
 	row.push(cell);
 	if (row.some((part) => part.trim())) rows.push(row);
 	if (rows.length < 2) return [];
-	const headers = rows[0].map((header) => header.replace(/^\uFEFF/, "").trim().toLowerCase());
+	const headers = rows[0].map((header) =>
+		header.replace(/^\uFEFF/, "").trim().toLowerCase(),
+	);
 	if (headers.some((header) => !header)) throw new Error("CSV inválido: hay encabezados vacíos.");
 	return rows.slice(1).map((cells) =>
 		Object.fromEntries(headers.map((header, index) => [header, cells[index] ?? ""])),
 	);
 }
 
-function scoreLead(row: OutscraperRow, domain: string): { score: number; reasons: string[] } {
+function scoreLead(
+	row: OutscraperRow,
+	domain: string,
+): { score: number; reasons: string[] } {
 	const reasons: string[] = [];
 	let score = 0;
-	if (domain) { score += 25; reasons.push("sitio web"); }
-	if (value(row, "phone")) { score += 20; reasons.push("teléfono"); }
-	if (value(row, "email")) { score += 20; reasons.push("email comercial"); }
-	if (value(row, "industry")) { score += 15; reasons.push("categoría"); }
-	if (value(row, "city") || value(row, "address")) { score += 10; reasons.push("ubicación"); }
+	if (domain) {
+		score += 25;
+		reasons.push("sitio web");
+	}
+	if (value(row, "phone")) {
+		score += 20;
+		reasons.push("teléfono");
+	}
+	if (value(row, "email")) {
+		score += 20;
+		reasons.push("email comercial");
+	}
+	if (value(row, "industry")) {
+		score += 15;
+		reasons.push("categoría");
+	}
+	if (value(row, "city") || value(row, "address")) {
+		score += 10;
+		reasons.push("ubicación");
+	}
 	const rating = Number(value(row, "rating").replace(",", "."));
 	const reviews = Number(value(row, "reviews").replace(/[^0-9]/g, ""));
-	if (Number.isFinite(rating) && rating >= 4 && Number.isFinite(reviews) && reviews >= 5) {
+	if (
+		Number.isFinite(rating) &&
+		rating >= 4 &&
+		Number.isFinite(reviews) &&
+		reviews >= 5
+	) {
 		score += 10;
 		reasons.push("señales públicas de reputación");
 	}
@@ -107,7 +134,10 @@ export function prepareOutscraperLeads(
 	rows: OutscraperRow[],
 	options: { city?: string; limit?: number } = {},
 ): PreparationResult {
-	const limit = Math.min(30, Math.max(1, Math.floor(options.limit ?? 30)));
+	const limit = Math.min(
+		30,
+		Math.max(1, Math.floor(options.limit ?? 30)),
+	);
 	const targetCity = options.city?.trim().toLocaleLowerCase("es") ?? "";
 	const leads: PreparedLead[] = [];
 	const rejected: PreparationResult["rejected"] = [];
@@ -168,5 +198,10 @@ export function toCsv(leads: PreparedLead[]): string {
 		const text = Array.isArray(input) ? input.join("; ") : String(input);
 		return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
 	};
-	return [headers.join(","), ...leads.map((lead) => headers.map((header) => escape(lead[header])).join(","))].join("\n");
+	return [
+		headers.join(","),
+		...leads.map((lead) =>
+			headers.map((header) => escape(lead[header])).join(","),
+		),
+	].join("\n");
 }
