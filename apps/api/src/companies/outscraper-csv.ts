@@ -197,7 +197,7 @@ export function toCsv(leads: PreparedLead[]): string {
 	const escape = (input: string | number | string[]) => {
 		const text = Array.isArray(input) ? input.join("; ") : String(input);
 		const safeText =
-			typeof input === "string" && /^[\\t\\r ]*[=+\\-@]/.test(text)
+			typeof input === "string" && /^[\t\r ]*[=+\-@]/.test(text)
 				? `'${text}`
 				: text;
 		return /[",\\r\\n]/.test(safeText)
