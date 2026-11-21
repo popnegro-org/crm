@@ -103,7 +103,9 @@ export function parseCsv(input: string): OutscraperRow[] {
 		throw new Error("CSV inválido: hay encabezados vacíos.");
 	}
 	return rows.slice(1).map((cells) =>
-		Object.fromEntries(headers.map((header, index) => [header, cells[index] ?? ""])),
+		Object.fromEntries(
+			headers.map((header, index) => [header, cells[index] ?? ""]),
+		),
 	);
 }
 
@@ -135,7 +137,12 @@ function scoreLead(
 	}
 	const rating = Number(value(row, "rating").replace(",", "."));
 	const reviews = Number(value(row, "reviews").replace(/[^0-9]/g, ""));
-	if (Number.isFinite(rating) && rating >= 4 && Number.isFinite(reviews) && reviews >= 5) {
+	if (
+		Number.isFinite(rating) &&
+		rating >= 4 &&
+		Number.isFinite(reviews) &&
+		reviews >= 5
+	) {
 		score += 10;
 		reasons.push("señales públicas de reputación");
 	}
@@ -222,7 +229,8 @@ export function prepareOutscraperLeads(
 export function toCsv(leads: PreparedLead[]): string {
 	const headers: Array<keyof PreparedLead> = [
 		"name", "domain", "website", "industry", "city", "stateCode", "country",
-		"countryCode", "phone", "email", "description", "source", "leadScore", "scoreReasons",
+		"countryCode", "phone", "email", "description", "source", "leadScore",
+		"scoreReasons",
 	];
 	const escape = (input: string | number | string[]) => {
 		const text = Array.isArray(input) ? input.join("; ") : String(input);
@@ -236,6 +244,8 @@ export function toCsv(leads: PreparedLead[]): string {
 	};
 	return [
 		headers.join(","),
-		...leads.map((lead) => headers.map((header) => escape(lead[header])).join(",")),
+		...leads.map((lead) =>
+			headers.map((header) => escape(lead[header])).join(","),
+		),
 	].join("\n");
 }
