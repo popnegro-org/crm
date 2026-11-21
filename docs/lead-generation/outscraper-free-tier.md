@@ -20,7 +20,7 @@ bun run leads:prepare -- /absolute/path/to/outscraper.csv /absolute/path/to/lead
 
 - Maximum 30 prepared businesses per run.
 - Accepts common Outscraper column aliases for name, website, category, location, phone and business email.
-- Normalizes domains and deduplicates against every available domain, phone and business-name identifier.
+- Normalizes domains and checks every available domain and phone identifier. It uses the business name only when neither strong identifier exists.
 - Filters records to the requested city.
 - Rejects rows without a business name and rows outside the target city.
 - Produces a transparent 0–100 completeness/quality signal with reasons; it is a triage aid, not a prediction of conversion.
