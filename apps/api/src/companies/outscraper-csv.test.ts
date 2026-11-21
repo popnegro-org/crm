@@ -51,4 +51,12 @@ describe("Outscraper CSV preparation", () => {
 		expect(csv).toContain('"Estudio, Uno"');
 		expect(csv.split("\n")[0]).toContain("leadScore");
 	});
+	test("neutralizes spreadsheet formulas in exported text fields", () => {
+		const result = prepareOutscraperLeads([
+			{ name: "=HYPERLINK(1)", site: "example.com", city: "Mendoza" },
+		]);
+		const csv = toCsv(result.leads);
+		expect(csv).toContain("'=HYPERLINK(1)");
+	});
+
 });
