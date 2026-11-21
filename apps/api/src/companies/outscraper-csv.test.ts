@@ -17,7 +17,7 @@ describe("Outscraper CSV preparation", () => {
     const result = prepareOutscraperLeads(rows, { city: "Mendoza", limit: 30 });
     expect(result.leads).toHaveLength(1);
     expect(result.leads[0]?.domain).toBe("estudiouno.com.ar");
-    expect(result.leads[0]?.leadScore).toBe(70);
+    expect(result.leads[0]?.leadScore).toBe(80);
     expect(result.duplicates).toHaveLength(1);
     expect(result.rejected).toHaveLength(2);
   });
