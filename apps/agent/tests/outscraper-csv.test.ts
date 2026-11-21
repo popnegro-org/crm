@@ -8,10 +8,10 @@ import {
 describe("Outscraper CSV preparation", () => {
 	test("parses quoted commas, escaped quotes and newlines", () => {
 		const rows = parseCsv(
-			'name,description\\n"Estudio, Legal","Dice ""hola""\\ny sigue"\\n',
+			'name,description\n"Estudio, Legal","Dice ""hola""\ny sigue"\n',
 		);
 		expect(rows).toEqual([
-			{ name: "Estudio, Legal", description: 'Dice "hola"\\ny sigue' },
+			{ name: "Estudio, Legal", description: 'Dice "hola"\ny sigue' },
 		]);
 	});
 
@@ -104,7 +104,7 @@ describe("Outscraper CSV preparation", () => {
 		]);
 		const csv = toCsv(result.leads);
 		expect(csv).toContain('"Estudio, Uno"');
-		expect(csv.split("\\n")[0]).toContain("leadScore");
+		expect(csv.split("\n")[0]).toContain("leadScore");
 	});
 
 	test("neutralizes spreadsheet formulas in exported text fields", () => {
