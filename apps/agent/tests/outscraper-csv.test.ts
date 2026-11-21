@@ -3,6 +3,7 @@ import {
 	parseCsv,
 	prepareOutscraperLeads,
 	toCsv,
+	type OutscraperRow,
 } from "../agent/lib/outscraper-csv";
 
 describe("Outscraper CSV preparation", () => {
@@ -16,7 +17,7 @@ describe("Outscraper CSV preparation", () => {
 	});
 
 	test("normalizes, scores, filters city and caps the batch at 30", () => {
-		const rows = [
+		const rows: OutscraperRow[] = [
 			{
 				name: "Estudio Uno",
 				site: "https://www.estudiouno.com.ar/",
