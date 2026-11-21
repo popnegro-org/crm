@@ -1,8 +1,16 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
-import { parseCsv, prepareOutscraperLeads, toCsv } from "../src/companies/outscraper-csv";
+import {
+	parseCsv,
+	prepareOutscraperLeads,
+	toCsv,
+} from "../src/companies/outscraper-csv";
 
-const [inputArg, outputArg = "outscraper-leads-prepared.csv", cityArg = "Mendoza"] = Bun.argv.slice(2);
+const [
+	inputArg,
+	outputArg = "outscraper-leads-prepared.csv",
+	cityArg = "Mendoza",
+] = Bun.argv.slice(2);
 if (!inputArg) {
 	console.error("Uso: bun run leads:prepare -- <entrada.csv> [salida.csv] [ciudad]");
 	process.exit(1);
