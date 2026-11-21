@@ -1,10 +1,18 @@
 import { describe, expect, test } from "bun:test";
-import { parseCsv, prepareOutscraperLeads, toCsv } from "../agent/lib/outscraper-csv";
+import {
+	parseCsv,
+	prepareOutscraperLeads,
+	toCsv,
+} from "../agent/lib/outscraper-csv";
 
 describe("Outscraper CSV preparation", () => {
 	test("parses quoted commas, escaped quotes and newlines", () => {
-		const rows = parseCsv('name,description\n"Estudio, Legal","Dice ""hola""\ny sigue"\n');
-		expect(rows).toEqual([{ name: "Estudio, Legal", description: 'Dice "hola"\ny sigue' }]);
+		const rows = parseCsv(
+			'name,description\\n"Estudio, Legal","Dice ""hola""\\ny sigue"\\n',
+		);
+		expect(rows).toEqual([
+			{ name: "Estudio, Legal", description: 'Dice "hola"\\ny sigue' },
+		]);
 	});
 
 	test("normalizes, scores, filters city and caps the batch at 30", () => {
@@ -23,10 +31,17 @@ describe("Outscraper CSV preparation", () => {
 				site: "https://estudiouno.com.ar",
 				city: "Mendoza",
 			},
-			{ name: "Negocio remoto", site: "https://remoto.com", city: "Córdoba" },
+			{
+				name: "Negocio remoto",
+				site: "https://remoto.com",
+				city: "Córdoba",
+			},
 			{ name: "", city: "Mendoza" },
 		];
-		const result = prepareOutscraperLeads(rows, { city: "Mendoza", limit: 30 });
+		const result = prepareOutscraperLeads(rows, {
+			city: "Mendoza",
+			limit: 30,
+		});
 		expect(result.leads).toHaveLength(1);
 		expect(result.leads[0]?.domain).toBe("estudiouno.com.ar");
 		expect(result.leads[0]?.leadScore).toBe(80);
@@ -89,7 +104,7 @@ describe("Outscraper CSV preparation", () => {
 		]);
 		const csv = toCsv(result.leads);
 		expect(csv).toContain('"Estudio, Uno"');
-		expect(csv.split("\n")[0]).toContain("leadScore");
+		expect(csv.split("\\n")[0]).toContain("leadScore");
 	});
 
 	test("neutralizes spreadsheet formulas in exported text fields", () => {
