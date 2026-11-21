@@ -151,16 +151,18 @@ function scoreLead(
 
 function identityKeys(row: OutscraperRow, domain: string): string[] {
 	const phone = value(row, "phone").replace(/\D/g, "");
+	const strongKeys = [
+		...(domain ? [`domain:${domain}`] : []),
+		...(phone ? [`phone:${phone}`] : []),
+	];
+	if (strongKeys.length > 0) return strongKeys;
+
 	const name = value(row, "name")
 		.toLocaleLowerCase("es")
 		.normalize("NFKD")
 		.replace(/[\u0300-\u036f]/g, "")
 		.replace(/[^a-z0-9]/g, "");
-	return [
-		...(domain ? [`domain:${domain}`] : []),
-		...(phone ? [`phone:${phone}`] : []),
-		...(name ? [`name:${name}`] : []),
-	];
+	return name ? [`name:${name}`] : [];
 }
 
 export function prepareOutscraperLeads(
