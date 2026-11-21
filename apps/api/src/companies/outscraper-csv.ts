@@ -198,10 +198,10 @@ export function toCsv(leads: PreparedLead[]): string {
 		const text = Array.isArray(input) ? input.join("; ") : String(input);
 		const safeText =
 			typeof input === "string" && /^[\t\r ]*[=+\-@]/.test(text)
-				? \`'\${text}\`
+				? "'" + text
 				: text;
 		return /[",\r\n]/.test(safeText)
-			? \`"\${safeText.replace(/"/g, '""')}"\`
+			? '"' + safeText.replace(/"/g, '""') + '"'
 			: safeText;
 	};
 	return [
