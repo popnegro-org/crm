@@ -56,9 +56,9 @@ export function parseCsv(input: string): OutscraperRow[] {
 	let cell = "";
 	let quoted = false;
 	for (let i = 0; i < input.length; i++) {
-		const char = input[i];
+		const char = input.charAt(i);
 		if (char === '"') {
-			if (quoted && input[i + 1] === '"') {
+			if (quoted && input.charAt(i + 1) === '"') {
 				cell += '"';
 				i++;
 			} else {
@@ -68,7 +68,7 @@ export function parseCsv(input: string): OutscraperRow[] {
 			row.push(cell);
 			cell = "";
 		} else if ((char === "\n" || char === "\r") && !quoted) {
-			if (char === "\r" && input[i + 1] === "\n") i++;
+			if (char === "\r" && input.charAt(i + 1) === "\n") i++;
 			row.push(cell);
 			if (row.some((part) => part.trim())) rows.push(row);
 			row = [];
@@ -81,7 +81,9 @@ export function parseCsv(input: string): OutscraperRow[] {
 	row.push(cell);
 	if (row.some((part) => part.trim())) rows.push(row);
 	if (rows.length < 2) return [];
-	const headers = rows[0].map((header) =>
+	const headerRow = rows[0];
+	if (!headerRow) return [];
+	const headers = headerRow.map((header) =>
 		header.replace(/^\uFEFF/, "").trim().toLowerCase(),
 	);
 	if (headers.some((header) => !header)) throw new Error("CSV inválido: hay encabezados vacíos.");
