@@ -13,3 +13,7 @@ if [[ "${VERCEL_GIT_COMMIT_REF:-}" == "fix/cloudflare-minute-dispatch" ]]; then
 fi
 
 bun run build
+
+if [[ "${VERCEL_GIT_COMMIT_REF:-}" == "fix/cloudflare-minute-dispatch" ]]; then
+  node scripts/add-preview-schedule.mjs
+fi
