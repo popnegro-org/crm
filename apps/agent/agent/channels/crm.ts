@@ -16,6 +16,7 @@ import {
 	drainAgentRuns,
 	drainBuilder,
 	failRun,
+	queueDueAgentRuns,
 	runIdFromToken,
 	runToken,
 } from "../lib/custom-agent-dispatch";
@@ -27,6 +28,7 @@ import {
 	taskAuth,
 } from "../lib/dispatch";
 import { DISPATCH } from "../lib/dispatch-config";
+import { sweepBlankFacts } from "../lib/blank-facts";
 import { settle } from "../lib/enrichment";
 import { finishRun, runResultOf } from "../lib/run-runtime";
 import { attribute } from "../lib/session-purpose";
@@ -137,16 +139,20 @@ export default defineChannel({
 			}
 
 			waitUntil(
-				(async () => {
-					await reconcileStaleTasks();
-					await drainAll((task) =>
-						send(brief(task), {
-							auth: taskAuth(task),
-							continuationToken: taskToken(task.id),
-						}),
-					);
-					await drainAgentRuns(send);
-				})(),
+				Promise.all([
+					sweepBlankFacts(),
+					(async () => {
+						await reconcileStaleTasks();
+						await drainAll((task) =>
+							send(brief(task), {
+								auth: taskAuth(task),
+								continuationToken: taskToken(task.id),
+							}),
+						);
+						await queueDueAgentRuns();
+						await Promise.all([drainBuilder(send), drainAgentRuns(send)]);
+					})(),
+				]),
 			);
 
 			return new Response(null, { status: 202 });
