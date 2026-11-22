@@ -5,6 +5,7 @@ import { schemas } from "@crm/validation";
 import { eveTurnFailure } from "@crm/validation/eve-stream";
 import { defineChannel, GET, POST } from "eve/channels";
 import { z } from "zod";
+import { sweepBlankFacts } from "../lib/blank-facts";
 import { persistBuilderInputRequest } from "../lib/builder-input";
 import { verifyKey } from "../lib/context-dev";
 import {
@@ -28,7 +29,6 @@ import {
 	taskAuth,
 } from "../lib/dispatch";
 import { DISPATCH } from "../lib/dispatch-config";
-import { sweepBlankFacts } from "../lib/blank-facts";
 import { settle } from "../lib/enrichment";
 import { finishRun, runResultOf } from "../lib/run-runtime";
 import { attribute } from "../lib/session-purpose";
