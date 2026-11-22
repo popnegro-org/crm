@@ -11,6 +11,7 @@
 		"./lib/*": "./src/lib/*.ts"
 	},
 	"scripts": {
+		"build": "tsc --noEmit",
 		"check-types": "tsc --noEmit",
 		"ui:add": "shadcn add",
 		"lint": "biome check .",

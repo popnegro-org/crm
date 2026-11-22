@@ -27,10 +27,8 @@
 		"./workspace": "./src/workspace.ts"
 	},
 	"scripts": {
-		"build": "prisma generate",
 		"check-types": "tsc --noEmit",
 		"db:deploy": "prisma migrate deploy",
-		"db:generate": "prisma generate",
 		"db:migrate": "bun scripts/require-local-db.ts db:migrate && prisma migrate dev",
 		"db:push": "bun scripts/require-local-db.ts db:push && prisma db push",
 		"db:reset": "bun scripts/require-local-db.ts db:reset && prisma migrate reset",
@@ -40,7 +38,6 @@
 		"test": "bun test",
 		"dev:prepare": "bun scripts/prepare-dev.ts",
 		"lint": "biome check .",
-		"postinstall": "prisma generate",
 		"clean": "rm -rf .turbo node_modules src/generated"
 	},
 	"dependencies": {
@@ -53,7 +50,7 @@
 		"@crm/typescript-config": "workspace:*",
 		"@types/node": "^24.10.1",
 		"pg": "^8.22.0",
-		"prisma": "^7.9.1",
+		"prisma": "8.0.0-rc.33",
 		"typescript": "5.9.2"
 	}
 }

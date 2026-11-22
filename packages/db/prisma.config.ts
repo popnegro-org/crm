@@ -1,15 +1,11 @@
-import "@crm/env/load";
-
 import path from "node:path";
-import { defineConfig, env } from "prisma/config";
+import { defineConfig as orm } from "@prisma/orm-postgres/config";
+import { definePrismaConfig } from "prisma/config";
 
-export default defineConfig({
-	schema: path.join("prisma", "schema.prisma"),
-	migrations: {
-		path: path.join("prisma", "migrations"),
-		seed: "bun run prisma/seed.ts",
-	},
-	datasource: {
-		url: env("DATABASE_URL"),
-	},
+export default definePrismaConfig({
+	orm: orm({
+		contract: path.join("src", "prisma", "contract.prisma"),
+		output: path.join("src", "prisma"),
+		db: { connection: process.env["DATABASE_URL"] ?? "" },
+	}),
 });

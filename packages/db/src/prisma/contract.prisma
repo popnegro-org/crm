@@ -1,0 +1,1424 @@
+// use prisma-8
+// Contract inferred from the live database schema. Edit as needed, then run `prisma contract emit`.
+
+namespace public {
+  model User {
+    id                           String                        @id(map: "user_pkey")
+    name                         String
+    email                        String
+    emailVerified                Boolean                       @default(false)
+    image                        String?
+    createdAt                    DateTime(storage: timestamp)  @default(now())
+    updatedAt                    DateTime(storage: timestamp) @onCreate(now()) @onUpdate(now())
+    accounts                     Account[]
+    activities                   Activity[]
+    agentAuditEvents             AgentAuditEvent[]
+    agentConversations           AgentConversation[]
+    agentConversationFeedbacks   AgentConversationFeedback[]
+    agentConversationShares      AgentConversationShare[]
+    agentConversationSubmissions AgentConversationSubmission[]
+    agentDefinitions             AgentDefinition[]
+    agentRuns                    AgentRun[]
+    agentTriggers                AgentTrigger[]
+    agentVersions                AgentVersion[]
+    apikeys                      Apikey[]
+    companies                    Company[]
+    contacts                     Contact[]
+    contactFacts                 ContactFact[]
+    deals                        Deal[]
+    fieldValues                  FieldValue[]
+    invitations                  Invitation[]
+    mailboxSyncs                 MailboxSync[]
+    members                      Member[]
+    savedViews                   SavedView[]
+    sessions                     Session[]
+    slackMemberMatch             SlackMemberMatch?
+    ssoProviders                 SsoProvider[]
+
+    @@index([email], map: "user_email_key", unique: true)
+    @@map("user")
+  }
+
+  model Account {
+    id                    String                        @id(map: "account_pkey")
+    accountId             String
+    providerId            String
+    userId                String
+    accessToken           String?
+    refreshToken          String?
+    idToken               String?
+    accessTokenExpiresAt  DateTime(storage: timestamp)?
+    refreshTokenExpiresAt DateTime(storage: timestamp)?
+    scope                 String?
+    password              String?
+    createdAt             DateTime(storage: timestamp)  @default(now())
+    updatedAt             DateTime(storage: timestamp) @onCreate(now()) @onUpdate(now())
+    user                  User                          @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "account_userId_fkey")
+
+    @@index([userId], map: "account_userId_idx")
+    @@map("account")
+  }
+
+  model Contact {
+    id                 String                        @id(map: "contact_pkey")
+    firstName          String
+    lastName           String?
+    email              String?
+    phone              String?
+    title              String?
+    linkedinUrl        String?
+    companyId          String?
+    ownerId            String?
+    createdAt          DateTime(storage: timestamp)  @default(now())
+    updatedAt          DateTime(storage: timestamp) @onCreate(now()) @onUpdate(now())
+    source             pg.enum(RecordSource)         @default("MANUAL")
+    lastActivityAt     DateTime(storage: timestamp)?
+    imageUrl           String?
+    githubUrl          String?
+    twitterUrl         String?
+    socialsCheckedAt   DateTime(storage: timestamp)?
+    enrichedAt         DateTime(storage: timestamp)?
+    enrichmentError    String?
+    enrichmentStatus   pg.enum(EnrichmentStatus)     @default("PENDING")
+    archivedAt         DateTime(storage: timestamp)?
+    function           String?
+    seniority          String?
+    activities         Activity[]
+    agentConversations AgentConversation[]
+    calendarAttendees  CalendarAttendee[]
+    calendarEvents     CalendarEvent[]
+    company            Company?
+    contactBrief       ContactBrief?
+    contactFacts       ContactFact[]
+    dealContacts       DealContact[]
+    emailThreads       EmailThread[]
+    fieldValues        FieldValue[]
+    formSubmissions    FormSubmission[]
+    trackedVisitors    TrackedVisitor[]
+    companyCompany     Company?                      @relation(fields: [companyId], references: [id], onDelete: SetNull, onUpdate: Cascade, map: "contact_companyId_fkey")
+    owner              User?                         @relation(fields: [ownerId], references: [id], onDelete: SetNull, onUpdate: Cascade, map: "contact_ownerId_fkey")
+
+    @@index([archivedAt], map: "contact_archivedAt_idx")
+    @@index([companyId], map: "contact_companyId_idx")
+    @@index([email], map: "contact_email_active_key", where: sql`("archivedAt" IS NULL)`, unique: true)
+    @@index([lastActivityAt], map: "contact_lastActivityAt_idx")
+    @@index([ownerId], map: "contact_ownerId_idx")
+    @@map("contact")
+  }
+
+  model Company {
+    id                 String                        @id(map: "company_pkey")
+    name               String
+    domain             String?
+    website            String?
+    description        String?
+    logoUrl            String?
+    logoDarkUrl        String?
+    iconUrl            String?
+    brandColor         String?
+    industry           String?
+    subIndustry        String?
+    city               String?
+    stateCode          String?
+    country            String?
+    countryCode        String?
+    phone              String?
+    email              String?
+    linkedinUrl        String?
+    twitterUrl         String?
+    githubUrl          String?
+    pricingUrl         String?
+    careersUrl         String?
+    ownerId            String?
+    primaryContactId   String?
+    enrichmentStatus   pg.enum(EnrichmentStatus)     @default("PENDING")
+    enrichedAt         DateTime(storage: timestamp)?
+    enrichmentError    String?
+    createdAt          DateTime(storage: timestamp)  @default(now())
+    updatedAt          DateTime(storage: timestamp) @onCreate(now()) @onUpdate(now())
+    source             pg.enum(RecordSource)         @default("MANUAL")
+    lastActivityAt     DateTime(storage: timestamp)?
+    iconDarkUrl        String?
+    iconTone           String?
+    archivedAt         DateTime(storage: timestamp)?
+    activities         Activity[]
+    agentConversations AgentConversation[]
+    calendarEvents     CalendarEvent[]
+    companyEnrichment  CompanyEnrichment?
+    contacts           Contact[]
+    deals              Deal[]
+    emailThreads       EmailThread[]
+    fieldValues        FieldValue[]
+    owner              User?                         @relation(fields: [ownerId], references: [id], onDelete: SetNull, onUpdate: Cascade, map: "company_ownerId_fkey")
+    primaryContact     Contact?                      @relation(fields: [primaryContactId], references: [id], onDelete: SetNull, onUpdate: Cascade, map: "company_primaryContactId_fkey")
+
+    @@index([archivedAt], map: "company_archivedAt_idx")
+    @@index([domain], map: "company_domain_active_key", where: sql`("archivedAt" IS NULL)`, unique: true)
+    @@index([lastActivityAt], map: "company_lastActivityAt_idx")
+    @@index([name], map: "company_name_idx")
+    @@index([ownerId], map: "company_ownerId_idx")
+    @@index([primaryContactId], map: "company_primaryContactId_key", unique: true)
+    @@map("company")
+  }
+
+  model CalendarEvent {
+    id                String                       @id(map: "calendarEvent_pkey")
+    iCalUid           String
+    originalStartTime DateTime(storage: timestamp)
+    recurringEventId  String?
+    title             String?
+    description       String?
+    location          String?
+    conferenceUrl     String?
+    startsAt          DateTime(storage: timestamp)
+    endsAt            DateTime(storage: timestamp)
+    isAllDay          Boolean                      @default(false)
+    status            String
+    organizerEmail    String?
+    companyId         String?
+    contactId         String?
+    syncedByUserId    String?
+    googleEventId     String?
+    createdAt         DateTime(storage: timestamp) @default(now())
+    updatedAt         DateTime(storage: timestamp) @onCreate(now()) @onUpdate(now())
+    activity          Activity?
+    calendarAttendees CalendarAttendee[]
+    company           Company?                     @relation(fields: [companyId], references: [id], onDelete: SetNull, onUpdate: Cascade, map: "calendarEvent_companyId_fkey", index: "calendarEvent_companyId_startsAt_idx")
+    contact           Contact?                     @relation(fields: [contactId], references: [id], onDelete: SetNull, onUpdate: Cascade, map: "calendarEvent_contactId_fkey", index: "calendarEvent_contactId_startsAt_idx")
+
+    @@index([companyId, startsAt], map: "calendarEvent_companyId_startsAt_idx")
+    @@index([contactId, startsAt], map: "calendarEvent_contactId_startsAt_idx")
+    @@index([iCalUid, originalStartTime], map: "calendarEvent_iCalUid_originalStartTime_key", unique: true)
+    @@map("calendarEvent")
+  }
+
+  model Deal {
+    id                 String                             @id(map: "deal_pkey")
+    name               String
+    companyId          String
+    ownerId            String
+    stage              pg.enum(DealStage)                 @default("DEMO_BOOKED")
+    stageChangedAt     DateTime(storage: timestamp)       @default(now())
+    amount             Decimal(precision: 14, scale: 2)?
+    currency           String                             @default("USD")
+    expectedCloseDate  DateTime(storage: timestamp)?
+    closedAt           DateTime(storage: timestamp)?
+    closedReason       String?
+    createdAt          DateTime(storage: timestamp)       @default(now())
+    updatedAt          DateTime(storage: timestamp) @onCreate(now()) @onUpdate(now())
+    lastActivityAt     DateTime(storage: timestamp)?
+    description        String?
+    baseAmount         Decimal(precision: 24, scale: 4)?
+    fxRate             Decimal(precision: 20, scale: 10)?
+    fxRateAt           DateTime(storage: timestamp)?
+    baseCurrency       String?
+    archivedAt         DateTime(storage: timestamp)?
+    activities         Activity[]
+    agentConversations AgentConversation[]
+    dealContacts       DealContact[]
+    fieldValues        FieldValue[]
+    company            Company                            @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "deal_companyId_fkey")
+    owner              User                               @relation(fields: [ownerId], references: [id], onDelete: Restrict, onUpdate: Cascade, map: "deal_ownerId_fkey")
+
+    @@index([archivedAt], map: "deal_archivedAt_idx")
+    @@index([baseAmount], map: "deal_baseAmount_idx")
+    @@index([companyId], map: "deal_companyId_idx")
+    @@index([currency], map: "deal_currency_idx")
+    @@index([expectedCloseDate], map: "deal_expectedCloseDate_idx")
+    @@index([lastActivityAt], map: "deal_lastActivityAt_idx")
+    @@index([ownerId], map: "deal_ownerId_idx")
+    @@index([stage], map: "deal_stage_idx")
+    @@map("deal")
+  }
+
+  model EmailThread {
+    id             String                       @id(map: "emailThread_pkey")
+    rootMessageId  String
+    subject        String?
+    companyId      String?
+    contactId      String?
+    firstMessageAt DateTime(storage: timestamp)
+    lastMessageAt  DateTime(storage: timestamp)
+    messageCount   Int                          @default(0)
+    createdAt      DateTime(storage: timestamp) @default(now())
+    updatedAt      DateTime(storage: timestamp) @onCreate(now()) @onUpdate(now())
+    activity       Activity?
+    emailMessages  EmailMessage[]
+    company        Company?                     @relation(fields: [companyId], references: [id], onDelete: SetNull, onUpdate: Cascade, map: "emailThread_companyId_fkey", index: "emailThread_companyId_lastMessageAt_idx")
+    contact        Contact?                     @relation(fields: [contactId], references: [id], onDelete: SetNull, onUpdate: Cascade, map: "emailThread_contactId_fkey", index: "emailThread_contactId_lastMessageAt_idx")
+
+    @@index([companyId, lastMessageAt], map: "emailThread_companyId_lastMessageAt_idx")
+    @@index([contactId, lastMessageAt], map: "emailThread_contactId_lastMessageAt_idx")
+    @@index([rootMessageId], map: "emailThread_rootMessageId_key", unique: true)
+    @@map("emailThread")
+  }
+
+  model Activity {
+    id              String                        @id(map: "activity_pkey")
+    _type           pg.enum(ActivityType)         @map("type")
+    subject         String?
+    body            String?
+    occurredAt      DateTime(storage: timestamp)?
+    dueAt           DateTime(storage: timestamp)?
+    completedAt     DateTime(storage: timestamp)?
+    companyId       String?
+    contactId       String?
+    dealId          String?
+    createdById     String
+    meta            Jsonb?
+    createdAt       DateTime(storage: timestamp)  @default(now())
+    updatedAt       DateTime(storage: timestamp) @onCreate(now()) @onUpdate(now())
+    calendarEventId String?
+    emailThreadId   String?
+    calendarEvent   CalendarEvent?                @relation(fields: [calendarEventId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "activity_calendarEventId_fkey")
+    company         Company?                      @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "activity_companyId_fkey", index: "activity_companyId_createdAt_idx")
+    contact         Contact?                      @relation(fields: [contactId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "activity_contactId_fkey", index: "activity_contactId_createdAt_idx")
+    createdBy       User                          @relation(fields: [createdById], references: [id], onDelete: Restrict, onUpdate: Cascade, map: "activity_createdById_fkey")
+    deal            Deal?                         @relation(fields: [dealId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "activity_dealId_fkey", index: "activity_dealId_createdAt_idx")
+    emailThread     EmailThread?                  @relation(fields: [emailThreadId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "activity_emailThreadId_fkey")
+
+    @@index([calendarEventId], map: "activity_calendarEventId_key", unique: true)
+    @@index([companyId, createdAt], map: "activity_companyId_createdAt_idx")
+    @@index([contactId, createdAt], map: "activity_contactId_createdAt_idx")
+    @@index([createdById], map: "activity_createdById_idx")
+    @@index([dealId, createdAt], map: "activity_dealId_createdAt_idx")
+    @@index([dueAt], map: "activity_dueAt_idx")
+    @@index([emailThreadId], map: "activity_emailThreadId_key", unique: true)
+    @@map("activity")
+  }
+
+  model AgentConversation {
+    id                           String                         @id(map: "agentConversation_pkey")
+    contactId                    String?
+    companyId                    String?
+    userId                       String
+    sessionId                    String?
+    continuationToken            String?
+    streamIndex                  Int                            @default(0)
+    title                        String?
+    messageCount                 Int                            @default(0)
+    createdAt                    DateTime(storage: timestamp)   @default(now())
+    lastMessageAt                DateTime(storage: timestamp)   @default(now())
+    dealId                       String?
+    kind                         pg.enum(AgentConversationKind) @default("RECORD")
+    agentId                      String?
+    updatedAt                    DateTime(storage: timestamp) @onCreate(now()) @onUpdate(now())
+    lastAssistantAt              DateTime(storage: timestamp)?
+    lastReadAt                   DateTime(storage: timestamp)?
+    pendingInputRequest          Jsonb?
+    agentBuilderArtifacts        AgentBuilderArtifact[]
+    agentConversationFeedbacks   AgentConversationFeedback[]
+    agentConversationShares      AgentConversationShare[]
+    agentConversationSubmissions AgentConversationSubmission[]
+    agentEvents                  AgentEvent[]
+    agentVersions                AgentVersion[]
+    agent                        AgentDefinition?               @relation(fields: [agentId], references: [id], onDelete: SetNull, onUpdate: Cascade, map: "agentConversation_agentId_fkey", index: "agentConversation_agentId_lastMessageAt_idx")
+    company                      Company?                       @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "agentConversation_companyId_fkey", index: "agentConversation_companyId_lastMessageAt_idx")
+    contact                      Contact?                       @relation(fields: [contactId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "agentConversation_contactId_fkey", index: "agentConversation_contactId_lastMessageAt_idx")
+    deal                         Deal?                          @relation(fields: [dealId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "agentConversation_dealId_fkey", index: "agentConversation_dealId_lastMessageAt_idx")
+    user                         User                           @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "agentConversation_userId_fkey", index: "agentConversation_userId_kind_lastMessageAt_idx")
+
+    @@index([agentId, lastMessageAt], map: "agentConversation_agentId_lastMessageAt_idx")
+    @@index([companyId, lastMessageAt], map: "agentConversation_companyId_lastMessageAt_idx")
+    @@index([contactId, lastMessageAt], map: "agentConversation_contactId_lastMessageAt_idx")
+    @@index([dealId, lastMessageAt], map: "agentConversation_dealId_lastMessageAt_idx")
+    @@index([sessionId], map: "agentConversation_sessionId_key", unique: true)
+    @@index([userId, kind, lastMessageAt], map: "agentConversation_userId_kind_lastMessageAt_idx")
+    @@map("agentConversation")
+  }
+
+  model AgentVersion {
+    id                       String                        @id(map: "agentVersion_pkey")
+    agentId                  String
+    number                   Int
+    status                   pg.enum(AgentVersionStatus)   @default("DRAFT")
+    instructions             String
+    manifest                 Jsonb
+    modelId                  String
+    sandboxPolicy            Jsonb
+    validation               Jsonb?
+    sourceConversationId     String?
+    createdById              String
+    deploymentId             String?
+    approvedAt               DateTime(storage: timestamp)?
+    deployedAt               DateTime(storage: timestamp)?
+    createdAt                DateTime(storage: timestamp)  @default(now())
+    modelContextWindowTokens Int                           @default(1000000)
+    agentAuditEvents         AgentAuditEvent[]
+    agentBuilderArtifacts    AgentBuilderArtifact[]
+    agentDefinition          AgentDefinition?
+    agentRuns                AgentRun[]
+    agentTriggers            AgentTrigger[]
+    agent                    AgentDefinition               @relation(fields: [agentId], references: [id], onDelete: Restrict, onUpdate: Cascade, map: "agentVersion_agentId_fkey", index: "agentVersion_agentId_createdAt_idx")
+    createdBy                User                          @relation(fields: [createdById], references: [id], onDelete: Restrict, onUpdate: Cascade, map: "agentVersion_createdById_fkey", index: false)
+    sourceConversation       AgentConversation?            @relation(fields: [sourceConversationId], references: [id], onDelete: SetNull, onUpdate: Cascade, map: "agentVersion_sourceConversationId_fkey", index: false)
+
+    @@index([agentId, createdAt], map: "agentVersion_agentId_createdAt_idx")
+    @@index([agentId, number], map: "agentVersion_agentId_number_key", unique: true)
+    @@index([id, agentId], map: "agentVersion_id_agentId_key", unique: true)
+    @@index([status, createdAt], map: "agentVersion_status_createdAt_idx")
+    @@map("agentVersion")
+  }
+
+  model AgentDefinition {
+    id                 String                         @id(map: "agentDefinition_pkey")
+    name               String
+    description        String?
+    status             pg.enum(AgentDefinitionStatus) @default("DRAFT")
+    createdById        String
+    currentVersionId   String?
+    createdAt          DateTime(storage: timestamp)   @default(now())
+    updatedAt          DateTime(storage: timestamp) @onCreate(now()) @onUpdate(now())
+    archivedAt         DateTime(storage: timestamp)?
+    deletedAt          DateTime(storage: timestamp)?
+    agentActions       AgentAction[]
+    agentAuditEvents   AgentAuditEvent[]
+    agentConversations AgentConversation[]
+    agentRuns          AgentRun[]
+    agentTriggers      AgentTrigger[]
+    agentVersions      AgentVersion[]
+    createdBy          User                           @relation(fields: [createdById], references: [id], onDelete: Restrict, onUpdate: Cascade, map: "agentDefinition_createdById_fkey", index: "agentDefinition_createdById_createdAt_idx")
+    agentVersion       AgentVersion?                  @relation(fields: [currentVersionId, id], references: [id, agentId], onDelete: Restrict, onUpdate: Cascade, map: "agentDefinition_currentVersionId_id_fkey")
+
+    @@index([createdById, createdAt], map: "agentDefinition_createdById_createdAt_idx")
+    @@index([currentVersionId, id], map: "agentDefinition_currentVersionId_id_key", unique: true)
+    @@index([currentVersionId], map: "agentDefinition_currentVersionId_key", unique: true)
+    @@index([status, updatedAt], map: "agentDefinition_status_updatedAt_idx")
+    @@map("agentDefinition")
+  }
+
+  model AgentTrigger {
+    id           String                        @id(map: "agentTrigger_pkey")
+    agentId      String
+    versionId    String
+    _type        pg.enum(AgentTriggerType)     @map("type")
+    name         String
+    config       Jsonb
+    createdById  String
+    enabled      Boolean                       @default(false)
+    nextRunAt    DateTime(storage: timestamp)?
+    lastRunAt    DateTime(storage: timestamp)?
+    createdAt    DateTime(storage: timestamp)  @default(now())
+    updatedAt    DateTime(storage: timestamp) @onCreate(now()) @onUpdate(now())
+    agentRuns    AgentRun[]
+    agent        AgentDefinition               @relation(fields: [agentId], references: [id], onDelete: Restrict, onUpdate: Cascade, map: "agentTrigger_agentId_fkey", index: "agentTrigger_agentId_enabled_idx")
+    createdBy    User                          @relation(fields: [createdById], references: [id], onDelete: Restrict, onUpdate: Cascade, map: "agentTrigger_createdById_fkey", index: false)
+    agentVersion AgentVersion                  @relation(fields: [versionId, agentId], references: [id, agentId], onDelete: Restrict, onUpdate: Cascade, map: "agentTrigger_versionId_agentId_fkey", index: false)
+
+    @@index([agentId, enabled], map: "agentTrigger_agentId_enabled_idx")
+    @@index([enabled, nextRunAt], map: "agentTrigger_enabled_nextRunAt_idx")
+    @@index([id, agentId], map: "agentTrigger_id_agentId_key", unique: true)
+    @@index([versionId], map: "agentTrigger_versionId_idx")
+    @@map("agentTrigger")
+  }
+
+  model AgentRun {
+    id                String                            @id(map: "agentRun_pkey")
+    agentId           String
+    versionId         String
+    triggerId         String?
+    initiatedById     String?
+    triggerType       pg.enum(AgentTriggerType)
+    status            pg.enum(AgentRunStatus)           @default("QUEUED")
+    principalId       String?
+    sessionId         String?
+    idempotencyKey    String
+    correlationId     String
+    input             Jsonb?
+    result            Jsonb?
+    summary           String?
+    modelId           String?
+    inputTokens       Int?
+    outputTokens      Int?
+    costUsd           Decimal(precision: 12, scale: 6)?
+    errorCode         String?
+    errorMessage      String?
+    nextEventSequence Int                               @default(0)
+    createdAt         DateTime(storage: timestamp)      @default(now())
+    startedAt         DateTime(storage: timestamp)?
+    finishedAt        DateTime(storage: timestamp)?
+    cancelDeliveredAt DateTime(storage: timestamp)?
+    cancelRequestedAt DateTime(storage: timestamp)?
+    agentActions      AgentAction[]
+    agentRunEvents    AgentRunEvent[]
+    agent             AgentDefinition                   @relation(fields: [agentId], references: [id], onDelete: Restrict, onUpdate: Cascade, map: "agentRun_agentId_fkey", index: "agentRun_agentId_createdAt_idx")
+    initiatedBy       User?                             @relation(fields: [initiatedById], references: [id], onDelete: SetNull, onUpdate: Cascade, map: "agentRun_initiatedById_fkey", index: false)
+    agentTrigger      AgentTrigger?                     @relation(fields: [triggerId, agentId], references: [id, agentId], onDelete: Restrict, onUpdate: Cascade, map: "agentRun_triggerId_agentId_fkey", index: false)
+    agentVersion      AgentVersion                      @relation(fields: [versionId, agentId], references: [id, agentId], onDelete: Restrict, onUpdate: Cascade, map: "agentRun_versionId_agentId_fkey", index: false)
+
+    @@index([agentId, createdAt], map: "agentRun_agentId_createdAt_idx")
+    @@index([correlationId], map: "agentRun_correlationId_key", unique: true)
+    @@index([id, agentId], map: "agentRun_id_agentId_key", unique: true)
+    @@index([idempotencyKey], map: "agentRun_idempotencyKey_key", unique: true)
+    @@index([sessionId], map: "agentRun_sessionId_key", unique: true)
+    @@index([status, createdAt], map: "agentRun_status_createdAt_idx")
+    @@index([triggerId, createdAt], map: "agentRun_triggerId_createdAt_idx")
+    @@index([versionId, createdAt], map: "agentRun_versionId_createdAt_idx")
+    @@map("agentRun")
+  }
+
+  model AgentAction {
+    id             String                        @id(map: "agentAction_pkey")
+    agentId        String
+    runId          String
+    _type          String                        @map("type")
+    provider       String
+    targetType     String?
+    targetId       String?
+    targetLabel    String?
+    summary        String
+    metadata       Jsonb?
+    status         pg.enum(AgentActionStatus)    @default("PLANNED")
+    idempotencyKey String
+    requestHash    String?
+    externalId     String?
+    attemptCount   Int                           @default(0)
+    errorCode      String?
+    errorMessage   String?
+    plannedAt      DateTime(storage: timestamp)  @default(now())
+    startedAt      DateTime(storage: timestamp)?
+    completedAt    DateTime(storage: timestamp)?
+    updatedAt      DateTime(storage: timestamp) @onCreate(now()) @onUpdate(now())
+    agent          AgentDefinition               @relation(fields: [agentId], references: [id], onDelete: Restrict, onUpdate: Cascade, map: "agentAction_agentId_fkey", index: "agentAction_agentId_plannedAt_idx")
+    agentRun       AgentRun                      @relation(fields: [runId, agentId], references: [id, agentId], onDelete: Restrict, onUpdate: Cascade, map: "agentAction_runId_agentId_fkey", index: false)
+
+    @@index([agentId, plannedAt], map: "agentAction_agentId_plannedAt_idx")
+    @@index([idempotencyKey], map: "agentAction_idempotencyKey_key", unique: true)
+    @@index([provider, externalId], map: "agentAction_provider_externalId_idx")
+    @@index([runId, plannedAt], map: "agentAction_runId_plannedAt_idx")
+    @@index([status, plannedAt], map: "agentAction_status_plannedAt_idx")
+    @@map("agentAction")
+  }
+
+  model AgentAuditEvent {
+    id           String                       @id(map: "agentAuditEvent_pkey")
+    agentId      String
+    versionId    String?
+    actorUserId  String?
+    _type        String                       @map("type")
+    actorType    String
+    actorId      String?
+    summary      String
+    before       Jsonb?
+    after        Jsonb?
+    requestId    String?
+    emittedAt    DateTime(storage: timestamp) @default(now())
+    actorUser    User?                        @relation(fields: [actorUserId], references: [id], onDelete: SetNull, onUpdate: Cascade, map: "agentAuditEvent_actorUserId_fkey", index: "agentAuditEvent_actorUserId_emittedAt_idx")
+    agent        AgentDefinition              @relation(fields: [agentId], references: [id], onDelete: Restrict, onUpdate: Cascade, map: "agentAuditEvent_agentId_fkey", index: "agentAuditEvent_agentId_emittedAt_idx")
+    agentVersion AgentVersion?                @relation(fields: [versionId, agentId], references: [id, agentId], onDelete: Restrict, onUpdate: Cascade, map: "agentAuditEvent_versionId_agentId_fkey", index: false)
+
+    @@index([actorUserId, emittedAt], map: "agentAuditEvent_actorUserId_emittedAt_idx")
+    @@index([agentId, emittedAt], map: "agentAuditEvent_agentId_emittedAt_idx")
+    @@index([agentId, _type, requestId], map: "agentAuditEvent_agentId_type_requestId_key", unique: true)
+    @@index([_type, emittedAt], map: "agentAuditEvent_type_emittedAt_idx")
+    @@index([versionId, emittedAt], map: "agentAuditEvent_versionId_emittedAt_idx")
+    @@map("agentAuditEvent")
+  }
+
+  model AgentBuilderArtifact {
+    id              String                              @id(map: "agentBuilderArtifact_pkey")
+    conversationId  String?
+    versionId       String?
+    path            String
+    language        String
+    content         String
+    previousContent String?
+    revision        Int
+    status          pg.enum(AgentBuilderArtifactStatus) @default("WRITING")
+    createdAt       DateTime(storage: timestamp)        @default(now())
+    conversation    AgentConversation?                  @relation(fields: [conversationId], references: [id], onDelete: SetNull, onUpdate: Cascade, map: "agentBuilderArtifact_conversationId_fkey", index: "agentBuilderArtifact_conversationId_createdAt_idx")
+    version         AgentVersion?                       @relation(fields: [versionId], references: [id], onDelete: SetNull, onUpdate: Cascade, map: "agentBuilderArtifact_versionId_fkey", index: "agentBuilderArtifact_versionId_path_idx")
+
+    @@index([conversationId, createdAt], map: "agentBuilderArtifact_conversationId_createdAt_idx")
+    @@index([conversationId, path, revision], map: "agentBuilderArtifact_conversation_path_revision_key", where: sql`("conversationId" IS NOT NULL)`, unique: true)
+    @@index([versionId, path], map: "agentBuilderArtifact_versionId_path_idx")
+    @@index([versionId, path, revision], map: "agentBuilderArtifact_version_path_revision_key", where: sql`("versionId" IS NOT NULL)`, unique: true)
+    @@check(expression: sql`(("conversationId" IS NOT NULL) OR ("versionId" IS NOT NULL))`, map: "agentBuilderArtifact_owner_present")
+    @@map("agentBuilderArtifact")
+  }
+
+  model AgentConversationSubmission {
+    id                           String                                     @id(map: "agentConversationSubmission_pkey")
+    conversationId               String
+    submittedById                String
+    clientRequestId              String
+    message                      Jsonb
+    status                       pg.enum(AgentConversationSubmissionStatus) @default("PENDING")
+    attemptCount                 Int                                        @default(0)
+    errorCode                    String?
+    errorMessage                 String?
+    createdAt                    DateTime(storage: timestamp)               @default(now())
+    sentAt                       DateTime(storage: timestamp)?
+    acceptedAt                   DateTime(storage: timestamp)?
+    commandType                  pg.enum(AgentConversationCommandType)      @default("CHAT")
+    inputRequestId               String?
+    agentConversationAttachments AgentConversationAttachment[]
+    conversation                 AgentConversation                          @relation(fields: [conversationId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "agentConversationSubmission_conversationId_fkey", index: "agentConversationSubmission_conversationId_createdAt_idx")
+    submittedBy                  User                                       @relation(fields: [submittedById], references: [id], onDelete: Restrict, onUpdate: Cascade, map: "agentConversationSubmission_submittedById_fkey", index: false)
+
+    @@index([clientRequestId], map: "agentConversationSubmission_clientRequestId_key", unique: true)
+    @@index([conversationId, createdAt], map: "agentConversationSubmission_conversationId_createdAt_idx")
+    @@index([conversationId, inputRequestId], map: "agentConversationSubmission_conversationId_inputRequestId_key", unique: true)
+    @@index([status, createdAt], map: "agentConversationSubmission_status_createdAt_idx")
+    @@map("agentConversationSubmission")
+  }
+
+  model AgentConversationAttachment {
+    id           String                       @id(map: "agentConversationAttachment_pkey")
+    submissionId String
+    name         String
+    mediaType    String
+    size         Int
+    content      Bytes
+    position     Int
+    createdAt    DateTime(storage: timestamp) @default(now())
+    submission   AgentConversationSubmission  @relation(fields: [submissionId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "agentConversationAttachment_submissionId_fkey", index: "agentConversationAttachment_submissionId_position_idx")
+
+    @@index([submissionId, position], map: "agentConversationAttachment_submissionId_position_idx")
+    @@map("agentConversationAttachment")
+  }
+
+  model AgentConversationFeedback {
+    id             String                       @id(map: "agentConversationFeedback_pkey")
+    conversationId String
+    userId         String
+    messageId      String
+    rating         pg.enum(AgentResponseRating)
+    createdAt      DateTime(storage: timestamp) @default(now())
+    updatedAt      DateTime(storage: timestamp) @onCreate(now()) @onUpdate(now())
+    conversation   AgentConversation            @relation(fields: [conversationId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "agentConversationFeedback_conversationId_fkey", index: "agentConversationFeedback_conversationId_createdAt_idx")
+    user           User                         @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "agentConversationFeedback_userId_fkey", index: false)
+
+    @@index([conversationId, createdAt], map: "agentConversationFeedback_conversationId_createdAt_idx")
+    @@index([conversationId, userId, messageId], map: "agentConversationFeedback_conversationId_userId_messageId_key", unique: true)
+    @@map("agentConversationFeedback")
+  }
+
+  model AgentConversationShare {
+    id             String                               @id(map: "agentConversationShare_pkey")
+    conversationId String
+    createdById    String
+    scope          pg.enum(AgentConversationShareScope) @default("WORKSPACE_LINK")
+    tokenHash      String
+    createdAt      DateTime(storage: timestamp)         @default(now())
+    expiresAt      DateTime(storage: timestamp)?
+    revokedAt      DateTime(storage: timestamp)?
+    conversation   AgentConversation                    @relation(fields: [conversationId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "agentConversationShare_conversationId_fkey", index: "agentConversationShare_conversationId_revokedAt_idx")
+    createdBy      User                                 @relation(fields: [createdById], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "agentConversationShare_createdById_fkey", index: false)
+
+    @@index([conversationId, revokedAt], map: "agentConversationShare_conversationId_revokedAt_idx")
+    @@index([conversationId], map: "agentConversationShare_one_active_per_conversation", where: sql`("revokedAt" IS NULL)`, unique: true)
+    @@index([tokenHash], map: "agentConversationShare_tokenHash_key", unique: true)
+    @@map("agentConversationShare")
+  }
+
+  model AgentEvent {
+    id             String                       @id(map: "agentEvent_pkey")
+    sessionId      String
+    contactId      String?
+    _type          String                       @map("type")
+    data           Jsonb
+    emittedAt      DateTime(storage: timestamp)
+    conversationId String?
+    conversation   AgentConversation?           @relation(fields: [conversationId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "agentEvent_conversationId_fkey", index: "agentEvent_conversationId_emittedAt_idx")
+
+    @@index([contactId, emittedAt], map: "agentEvent_contactId_emittedAt_idx")
+    @@index([conversationId, emittedAt], map: "agentEvent_conversationId_emittedAt_idx")
+    @@index([sessionId, emittedAt], map: "agentEvent_sessionId_emittedAt_idx")
+    @@map("agentEvent")
+  }
+
+  model AgentRunEvent {
+    id        String                       @id(map: "agentRunEvent_pkey")
+    runId     String
+    sequence  Int
+    _type     String                       @map("type")
+    data      Jsonb
+    emittedAt DateTime(storage: timestamp) @default(now())
+    run       AgentRun                     @relation(fields: [runId], references: [id], onDelete: Restrict, onUpdate: Cascade, map: "agentRunEvent_runId_fkey", index: "agentRunEvent_runId_emittedAt_idx")
+
+    @@index([runId, emittedAt], map: "agentRunEvent_runId_emittedAt_idx")
+    @@index([runId, sequence], map: "agentRunEvent_runId_sequence_key", unique: true)
+    @@map("agentRunEvent")
+  }
+
+  model AgentTask {
+    id          String                        @id(map: "agentTask_pkey")
+    contactId   String?
+    companyId   String?
+    kind        String
+    reason      String
+    priority    Int                           @default(0)
+    budget      Int                           @default(4)
+    dueAt       DateTime(storage: timestamp)
+    leasedUntil DateTime(storage: timestamp)?
+    sessionId   String?
+    startedAt   DateTime(storage: timestamp)?
+    finishedAt  DateTime(storage: timestamp)?
+    outcome     String?
+    createdAt   DateTime(storage: timestamp)  @default(now())
+    attempts    Int                           @default(0)
+    dealId      String?
+    payload     Jsonb?
+    subject     String?
+
+    @@index([contactId], map: "agentTask_contactId_idx")
+    @@index([dealId], map: "agentTask_dealId_idx")
+    @@index([dueAt, leasedUntil], map: "agentTask_dueAt_leasedUntil_idx")
+    @@index([kind, subject], map: "agentTask_kind_subject_idx", where: sql`("finishedAt" IS NULL)`)
+    @@map("agentTask")
+  }
+
+  model Apikey {
+    id                  String                        @id(map: "apikey_pkey")
+    configId            String                        @default("default")
+    name                String?
+    start               String?
+    referenceId         String
+    prefix              String?
+    key                 String
+    refillInterval      Int?
+    refillAmount        Int?
+    lastRefillAt        DateTime(storage: timestamp)?
+    enabled             Boolean?                      @default(true)
+    rateLimitEnabled    Boolean?                      @default(true)
+    rateLimitTimeWindow Int?
+    rateLimitMax        Int?
+    requestCount        Int?                          @default(0)
+    remaining           Int?
+    lastRequest         DateTime(storage: timestamp)?
+    expiresAt           DateTime(storage: timestamp)?
+    createdAt           DateTime(storage: timestamp)
+    updatedAt           DateTime(storage: timestamp) @onCreate(now()) @onUpdate(now())
+    permissions         String?
+    metadata            String?
+    reference           User                          @relation(fields: [referenceId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "apikey_referenceId_fkey")
+
+    @@index([configId], map: "apikey_configId_idx")
+    @@index([key], map: "apikey_key_idx")
+    @@index([referenceId], map: "apikey_referenceId_idx")
+    @@map("apikey")
+  }
+
+  model AppSetting {
+    id                       String                        @id(map: "appSetting_pkey")
+    agentModelId             String?
+    agentModelContextWindow  Int?
+    updatedAt                DateTime(storage: timestamp) @onCreate(now()) @onUpdate(now())
+    contextDevApiKey         String?
+    reportingCurrency        String?
+    ratesRefreshedAt         DateTime(storage: timestamp)?
+    trackingSiteId           String?
+    trackingCrossDomain      Boolean                       @default(true)
+    trackingLimitToDomains   Boolean                       @default(true)
+    trackingCookieSubdomains Boolean                       @default(false)
+    trackingSecureCookies    Boolean                       @default(true)
+    trackingHonourDnt        Boolean                       @default(true)
+    trackingCookieDays       Int                           @default(395)
+    trackingConfigHash       String?
+    trackingPaused           Boolean                       @default(false)
+    archiveRetentionDays     Int                           @default(180)
+
+    @@index([trackingSiteId], map: "appSetting_trackingSiteId_key", unique: true)
+    @@map("appSetting")
+  }
+
+  model CalendarAttendee {
+    id             String        @id(map: "calendarAttendee_pkey")
+    eventId        String
+    email          String
+    name           String?
+    responseStatus String?
+    isOrganizer    Boolean       @default(false)
+    contactId      String?
+    contact        Contact?      @relation(fields: [contactId], references: [id], onDelete: SetNull, onUpdate: Cascade, map: "calendarAttendee_contactId_fkey")
+    event          CalendarEvent @relation(fields: [eventId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "calendarAttendee_eventId_fkey", index: "calendarAttendee_eventId_email_key")
+
+    @@index([contactId], map: "calendarAttendee_contactId_idx")
+    @@index([eventId, email], map: "calendarAttendee_eventId_email_key", unique: true)
+    @@map("calendarAttendee")
+  }
+
+  model CompanyEnrichment {
+    companyId String                       @id(map: "companyEnrichment_pkey")
+    source    String                       @default("context.dev")
+    raw       Jsonb
+    fetchedAt DateTime(storage: timestamp) @default(now())
+    company   Company                      @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "companyEnrichment_companyId_fkey")
+
+    @@map("companyEnrichment")
+  }
+
+  model ContactBrief {
+    contactId   String                       @id(map: "contactBrief_pkey")
+    narrative   String
+    sections    Jsonb
+    score       Float
+    sourceUrl   String?
+    sessionId   String?
+    refreshedAt DateTime(storage: timestamp) @default(now())
+    contact     Contact                      @relation(fields: [contactId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "contactBrief_contactId_fkey")
+
+    @@map("contactBrief")
+  }
+
+  model ContactFact {
+    id           String                        @id(map: "contactFact_pkey")
+    contactId    String
+    field        String
+    value        String
+    score        Float
+    band         pg.enum(FactBand)
+    evidence     Jsonb
+    method       String
+    sourceUrl    String?
+    sessionId    String?
+    status       pg.enum(FactStatus)           @default("PROPOSED")
+    decidedById  String?
+    decidedAt    DateTime(storage: timestamp)?
+    observedAt   DateTime(storage: timestamp)  @default(now())
+    supersededAt DateTime(storage: timestamp)?
+    contact      Contact                       @relation(fields: [contactId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "contactFact_contactId_fkey", index: "contactFact_contactId_field_status_idx")
+    decidedBy    User?                         @relation(fields: [decidedById], references: [id], onDelete: SetNull, onUpdate: Cascade, map: "contactFact_decidedById_fkey", index: false)
+
+    @@index([contactId, field, status], map: "contactFact_contactId_field_status_idx")
+    @@index([status, observedAt], map: "contactFact_status_observedAt_idx")
+    @@map("contactFact")
+  }
+
+  model DealContact {
+    dealId    String
+    contactId String
+    role      String?
+    contact   Contact @relation(fields: [contactId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "dealContact_contactId_fkey")
+    deal      Deal    @relation(fields: [dealId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "dealContact_dealId_fkey", index: "dealContact_pkey")
+
+    @@id([dealId, contactId], map: "dealContact_pkey")
+    @@index([contactId], map: "dealContact_contactId_idx")
+    @@map("dealContact")
+  }
+
+  model EmailMessage {
+    id               String                       @id(map: "emailMessage_pkey")
+    threadId         String
+    rfcMessageId     String
+    syncedByUserId   String?
+    gmailMessageId   String?
+    direction        pg.enum(EmailDirection)
+    fromEmail        String
+    fromName         String?
+    recipients       Jsonb
+    subject          String?
+    snippet          String?
+    body             String?
+    sentAt           DateTime(storage: timestamp)
+    createdAt        DateTime(storage: timestamp) @default(now())
+    outlookMessageId String?
+    outlookWebLink   String?
+    thread           EmailThread                  @relation(fields: [threadId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "emailMessage_threadId_fkey", index: "emailMessage_threadId_sentAt_idx")
+
+    @@index([rfcMessageId], map: "emailMessage_rfcMessageId_key", unique: true)
+    @@index([threadId, sentAt], map: "emailMessage_threadId_sentAt_idx")
+    @@map("emailMessage")
+  }
+
+  model ExchangeRate {
+    id            String                            @id(map: "exchangeRate_pkey")
+    baseCurrency  String
+    quoteCurrency String
+    rate          Decimal(precision: 20, scale: 10)
+    asOf          DateTime(storage: timestamp)
+    source        pg.enum(RateSource)
+    provider      String?
+    createdAt     DateTime(storage: timestamp)      @default(now())
+    updatedAt     DateTime(storage: timestamp) @onCreate(now()) @onUpdate(now())
+
+    @@index([baseCurrency, quoteCurrency], map: "exchangeRate_baseCurrency_quoteCurrency_idx")
+    @@index([baseCurrency, quoteCurrency, source], map: "exchangeRate_baseCurrency_quoteCurrency_source_key", unique: true)
+    @@map("exchangeRate")
+  }
+
+  model FieldDefinition {
+    id           String                        @id(map: "fieldDefinition_pkey")
+    entity       pg.enum(FieldEntity)
+    key          String
+    label        String
+    _type        pg.enum(FieldType)            @map("type")
+    agentFilled  Boolean                       @default(true)
+    agentBrief   String?
+    required     Boolean                       @default(false)
+    showOnSheet  Boolean                       @default(true)
+    showOnTable  Boolean                       @default(false)
+    position     Int
+    archivedAt   DateTime(storage: timestamp)?
+    createdAt    DateTime(storage: timestamp)  @default(now())
+    updatedAt    DateTime(storage: timestamp) @onCreate(now()) @onUpdate(now())
+    showOnFilter Boolean                       @default(false)
+    fieldOptions FieldOption[]
+    fieldValues  FieldValue[]
+
+    @@index([entity, key], map: "fieldDefinition_entity_key_key", unique: true)
+    @@index([entity, position], map: "fieldDefinition_entity_position_idx")
+    @@map("fieldDefinition")
+  }
+
+  model FieldOption {
+    id          String                        @id(map: "fieldOption_pkey")
+    fieldId     String
+    label       String
+    position    Int
+    archivedAt  DateTime(storage: timestamp)?
+    fieldValues FieldValue[]
+    field       FieldDefinition               @relation(fields: [fieldId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "fieldOption_fieldId_fkey", index: "fieldOption_fieldId_position_idx")
+
+    @@index([fieldId, position], map: "fieldOption_fieldId_position_idx")
+    @@map("fieldOption")
+  }
+
+  model FieldValue {
+    id        String                            @id(map: "fieldValue_pkey")
+    fieldId   String
+    companyId String?
+    contactId String?
+    dealId    String?
+    text      String?
+    number    Decimal(precision: 24, scale: 4)?
+    date      DateTime(storage: timestamp)?
+    bool      Boolean?
+    optionId  String?
+    userId    String?
+    updatedAt DateTime(storage: timestamp) @onCreate(now()) @onUpdate(now())
+    company   Company?                          @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "fieldValue_companyId_fkey")
+    contact   Contact?                          @relation(fields: [contactId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "fieldValue_contactId_fkey")
+    deal      Deal?                             @relation(fields: [dealId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "fieldValue_dealId_fkey")
+    field     FieldDefinition                   @relation(fields: [fieldId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "fieldValue_fieldId_fkey", index: "fieldValue_fieldId_companyId_key")
+    option    FieldOption?                      @relation(fields: [optionId], references: [id], onDelete: SetNull, onUpdate: Cascade, map: "fieldValue_optionId_fkey")
+    user      User?                             @relation(fields: [userId], references: [id], onDelete: SetNull, onUpdate: Cascade, map: "fieldValue_userId_fkey")
+
+    @@index([companyId], map: "fieldValue_companyId_idx")
+    @@index([contactId], map: "fieldValue_contactId_idx")
+    @@index([dealId], map: "fieldValue_dealId_idx")
+    @@index([fieldId, companyId], map: "fieldValue_fieldId_companyId_key", unique: true)
+    @@index([fieldId, contactId], map: "fieldValue_fieldId_contactId_key", unique: true)
+    @@index([fieldId, date], map: "fieldValue_fieldId_date_idx")
+    @@index([fieldId, dealId], map: "fieldValue_fieldId_dealId_key", unique: true)
+    @@index([fieldId, number], map: "fieldValue_fieldId_number_idx")
+    @@index([fieldId, text], map: "fieldValue_fieldId_text_idx")
+    @@index([optionId], map: "fieldValue_optionId_idx")
+    @@index([userId], map: "fieldValue_userId_idx")
+    @@map("fieldValue")
+  }
+
+  model FormSubmission {
+    id         String                        @id(map: "formSubmission_pkey")
+    visitorId  String?
+    contactId  String?
+    host       String
+    path       String
+    email      String?
+    fields     Jsonb
+    dedupeKey  String
+    filedAt    DateTime(storage: timestamp)?
+    skipReason String?
+    createdAt  DateTime(storage: timestamp)  @default(now())
+    firstTouch Jsonb?
+    lastTouch  Jsonb?
+    contact    Contact?                      @relation(fields: [contactId], references: [id], onDelete: SetNull, onUpdate: Cascade, map: "formSubmission_contactId_fkey")
+
+    @@index([contactId], map: "formSubmission_contactId_idx")
+    @@index([createdAt], map: "formSubmission_createdAt_idx")
+    @@index([dedupeKey], map: "formSubmission_dedupeKey_key", unique: true)
+    @@map("formSubmission")
+  }
+
+  model Install {
+    id           String                        @id(map: "install_pkey")
+    uuid         String
+    version      String
+    lastRollupAt DateTime(storage: timestamp)?
+    createdAt    DateTime(storage: timestamp)  @default(now())
+    updatedAt    DateTime(storage: timestamp) @onCreate(now()) @onUpdate(now())
+
+    @@index([uuid], map: "install_uuid_key", unique: true)
+    @@map("install")
+  }
+
+  model Organization {
+    id          String                       @id(map: "organization_pkey")
+    name        String
+    slug        String
+    logo        String?
+    createdAt   DateTime(storage: timestamp)
+    metadata    String?
+    website     String?
+    invitations Invitation[]
+    members     Member[]
+
+    @@index([slug], map: "organization_slug_key", unique: true)
+    @@map("organization")
+  }
+
+  model Invitation {
+    id             String                       @id(map: "invitation_pkey")
+    organizationId String
+    email          String
+    role           String?
+    status         String                       @default("pending")
+    expiresAt      DateTime(storage: timestamp)
+    createdAt      DateTime(storage: timestamp) @default(now())
+    inviterId      String
+    inviter        User                         @relation(fields: [inviterId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "invitation_inviterId_fkey", index: false)
+    organization   Organization                 @relation(fields: [organizationId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "invitation_organizationId_fkey")
+
+    @@index([email], map: "invitation_email_idx")
+    @@index([organizationId], map: "invitation_organizationId_idx")
+    @@map("invitation")
+  }
+
+  model MailboxSync {
+    id           String                        @id(map: "mailboxSync_pkey")
+    userId       String
+    source       String
+    status       pg.enum(GoogleSyncStatus)     @default("IDLE")
+    cursor       String?
+    lastSyncedAt DateTime(storage: timestamp)?
+    lastError    String?
+    retryAfter   DateTime(storage: timestamp)?
+    autoCreate   Boolean                       @default(false)
+    createdAt    DateTime(storage: timestamp)  @default(now())
+    updatedAt    DateTime(storage: timestamp) @onCreate(now()) @onUpdate(now())
+    user         User                          @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "mailboxSync_userId_fkey", index: "mailboxSync_userId_source_key")
+
+    @@index([status], map: "mailboxSync_status_idx")
+    @@index([userId, source], map: "mailboxSync_userId_source_key", unique: true)
+    @@map("mailboxSync")
+  }
+
+  model Member {
+    id             String                       @id(map: "member_pkey")
+    organizationId String
+    userId         String
+    role           String                       @default("member")
+    createdAt      DateTime(storage: timestamp)
+    organization   Organization                 @relation(fields: [organizationId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "member_organizationId_fkey")
+    user           User                         @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "member_userId_fkey")
+
+    @@index([organizationId], map: "member_organizationId_idx")
+    @@index([organizationId, userId], map: "member_organizationId_userId_key", unique: true)
+    @@index([userId], map: "member_userId_idx")
+    @@map("member")
+  }
+
+  model RateLimit {
+    id          String @id(map: "rateLimit_pkey")
+    key         String
+    count       Int
+    lastRequest BigInt
+
+    @@index([key], map: "rateLimit_key_key", unique: true)
+    @@map("rateLimit")
+  }
+
+  model SavedView {
+    id        String                       @id(map: "savedView_pkey")
+    entity    pg.enum(FieldEntity)
+    name      String
+    shared    Boolean                      @default(false)
+    filters   Jsonb
+    ownerId   String
+    createdAt DateTime(storage: timestamp) @default(now())
+    updatedAt DateTime(storage: timestamp) @onCreate(now()) @onUpdate(now())
+    owner     User                         @relation(fields: [ownerId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "savedView_ownerId_fkey", index: false)
+
+    @@index([entity, ownerId, name], map: "savedView_entity_ownerId_name_key", unique: true)
+    @@index([entity, shared], map: "savedView_entity_shared_idx")
+    @@map("savedView")
+  }
+
+  model Session {
+    id                   String                       @id(map: "session_pkey")
+    expiresAt            DateTime(storage: timestamp)
+    token                String
+    createdAt            DateTime(storage: timestamp) @default(now())
+    updatedAt            DateTime(storage: timestamp) @onCreate(now()) @onUpdate(now())
+    ipAddress            String?
+    userAgent            String?
+    userId               String
+    activeOrganizationId String?
+    user                 User                         @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "session_userId_fkey")
+
+    @@index([token], map: "session_token_key", unique: true)
+    @@index([userId], map: "session_userId_idx")
+    @@map("session")
+  }
+
+  model SlackChannel {
+    id                String                        @id(map: "slackChannel_pkey")
+    name              String
+    memberCount       Int?
+    available         Boolean                       @default(true)
+    createdAt         DateTime(storage: timestamp)  @default(now())
+    updatedAt         DateTime(storage: timestamp) @onCreate(now()) @onUpdate(now())
+    inviteRequestedAt DateTime(storage: timestamp)?
+    isMember          Boolean                       @default(false)
+    isPrivate         Boolean                       @default(false)
+    classifiedAt      DateTime(storage: timestamp)?
+
+    @@index([available, name], map: "slackChannel_available_name_idx")
+    @@index([updatedAt], map: "slackChannel_updatedAt_idx")
+    @@map("slackChannel")
+  }
+
+  model SlackInstallation {
+    installerId String                       @id(map: "slackInstallation_pkey")
+    teamId      String
+    teamName    String?
+    userToken   String?
+    userScopes  String
+    createdAt   DateTime(storage: timestamp) @default(now())
+
+    @@map("slackInstallation")
+  }
+
+  model SlackMemberMatch {
+    id          String                       @id(map: "slackMemberMatch_pkey")
+    crmUserId   String
+    slackUserId String?
+    slackHandle String?
+    slackEmail  String?
+    createdAt   DateTime(storage: timestamp) @default(now())
+    updatedAt   DateTime(storage: timestamp) @onCreate(now()) @onUpdate(now())
+    crmUser     User                         @relation(fields: [crmUserId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "slackMemberMatch_crmUserId_fkey")
+
+    @@index([crmUserId], map: "slackMemberMatch_crmUserId_key", unique: true)
+    @@index([slackUserId], map: "slackMemberMatch_slackUserId_idx")
+    @@map("slackMemberMatch")
+  }
+
+  model SlackWorkspaceGrant {
+    id         String                       @id(map: "slackWorkspaceGrant_pkey")
+    teamId     String
+    teamName   String?
+    userToken  String
+    userScopes String
+    createdAt  DateTime(storage: timestamp) @default(now())
+    updatedAt  DateTime(storage: timestamp) @onCreate(now()) @onUpdate(now())
+
+    @@index([teamId], map: "slackWorkspaceGrant_teamId_key", unique: true)
+    @@map("slackWorkspaceGrant")
+  }
+
+  model SsoProvider {
+    id             String  @id(map: "ssoProvider_pkey")
+    issuer         String
+    oidcConfig     String?
+    samlConfig     String?
+    userId         String?
+    providerId     String
+    organizationId String?
+    domain         String
+    user           User?   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "ssoProvider_userId_fkey", index: false)
+
+    @@index([providerId], map: "ssoProvider_providerId_key", unique: true)
+    @@map("ssoProvider")
+  }
+
+  model SuppressedContact {
+    email     String                       @id(map: "suppressedContact_pkey")
+    reason    String?
+    createdAt DateTime(storage: timestamp) @default(now())
+
+    @@map("suppressedContact")
+  }
+
+  model SuppressedDomain {
+    domain    String                       @id(map: "suppressedDomain_pkey")
+    reason    String?
+    createdAt DateTime(storage: timestamp) @default(now())
+
+    @@map("suppressedDomain")
+  }
+
+  model TelemetryCounter {
+    name      String                       @id(map: "telemetryCounter_pkey")
+    count     Int                          @default(0)
+    updatedAt DateTime(storage: timestamp) @onCreate(now()) @onUpdate(now())
+
+    @@map("telemetryCounter")
+  }
+
+  model TelemetryMilestone {
+    step      String                       @id(map: "telemetryMilestone_pkey")
+    reachedAt DateTime(storage: timestamp) @default(now())
+
+    @@map("telemetryMilestone")
+  }
+
+  model TrackedDomain {
+    id         String                        @id(map: "trackedDomain_pkey")
+    host       String
+    scope      pg.enum(DomainScope)          @default("EXACT_HOST")
+    pageViews  Int                           @default(0)
+    lastSeenAt DateTime(storage: timestamp)?
+    createdAt  DateTime(storage: timestamp)  @default(now())
+
+    @@index([host], map: "trackedDomain_host_key", unique: true)
+    @@map("trackedDomain")
+  }
+
+  model TrackedEvent {
+    id         String                       @id(map: "trackedEvent_pkey")
+    visitorId  String
+    _type      String                       @map("type")
+    host       String
+    path       String
+    referrer   String?
+    label      String?
+    occurredAt DateTime(storage: timestamp)
+    source     String?
+    medium     String?
+    campaign   String?
+
+    @@index([host, occurredAt], map: "trackedEvent_host_occurredAt_idx")
+    @@index([occurredAt], map: "trackedEvent_occurredAt_idx")
+    @@index([source, occurredAt], map: "trackedEvent_source_occurredAt_idx")
+    @@index([visitorId, occurredAt], map: "trackedEvent_visitorId_occurredAt_idx")
+    @@map("trackedEvent")
+  }
+
+  model TrackedPageDaily {
+    day      DateTime(storage: timestamp)
+    host     String
+    path     String
+    views    Int                          @default(0)
+    visitors Int                          @default(0)
+
+    @@id([day, host, path], map: "trackedPageDaily_pkey")
+    @@index([host, day], map: "trackedPageDaily_host_day_idx")
+    @@map("trackedPageDaily")
+  }
+
+  model TrackedVisitor {
+    id            String                        @id(map: "trackedVisitor_pkey")
+    contactId     String?
+    firstSeen     DateTime(storage: timestamp)  @default(now())
+    lastSeen      DateTime(storage: timestamp)
+    firstSource   String?
+    firstMedium   String?
+    firstCampaign String?
+    firstTerm     String?
+    firstContent  String?
+    firstReferrer String?
+    firstLanding  String?
+    firstTouchAt  DateTime(storage: timestamp)?
+    lastSource    String?
+    lastMedium    String?
+    lastCampaign  String?
+    lastTerm      String?
+    lastContent   String?
+    lastReferrer  String?
+    lastLanding   String?
+    lastTouchAt   DateTime(storage: timestamp)?
+    contact       Contact?                      @relation(fields: [contactId], references: [id], onDelete: SetNull, onUpdate: Cascade, map: "trackedVisitor_contactId_fkey")
+
+    @@index([contactId], map: "trackedVisitor_contactId_idx")
+    @@index([firstSource], map: "trackedVisitor_firstSource_idx")
+    @@map("trackedVisitor")
+  }
+
+  model TrackingCounter {
+    key       String                       @id(map: "trackingCounter_pkey")
+    value     Int                          @default(0)
+    expiresAt DateTime(storage: timestamp)
+
+    @@index([expiresAt], map: "trackingCounter_expiresAt_idx")
+    @@map("trackingCounter")
+  }
+
+  model Verification {
+    id         String                       @id(map: "verification_pkey")
+    identifier String
+    value      String
+    expiresAt  DateTime(storage: timestamp)
+    createdAt  DateTime(storage: timestamp) @default(now())
+    updatedAt  DateTime(storage: timestamp) @onCreate(now()) @onUpdate(now())
+
+    @@index([identifier], map: "verification_identifier_idx")
+    @@map("verification")
+  }
+
+  model WorkspaceProfile {
+    id          String                       @id(map: "workspaceProfile_pkey")
+    website     String
+    narrative   String
+    sections    Jsonb
+    sourceUrl   String?
+    sessionId   String?
+    refreshedAt DateTime(storage: timestamp) @default(now())
+
+    @@map("workspaceProfile")
+  }
+
+  native_enum ActivityType {
+    NOTE = "NOTE"
+    CALL = "CALL"
+    EMAIL = "EMAIL"
+    MEETING = "MEETING"
+    TASK = "TASK"
+    STAGE_CHANGE = "STAGE_CHANGE"
+    ENRICHMENT = "ENRICHMENT"
+  }
+
+  native_enum AgentActionStatus {
+    PLANNED = "PLANNED"
+    RUNNING = "RUNNING"
+    SUCCEEDED = "SUCCEEDED"
+    FAILED = "FAILED"
+    CANCELLED = "CANCELLED"
+  }
+
+  native_enum AgentBuilderArtifactStatus {
+    WRITING = "WRITING"
+    READY = "READY"
+  }
+
+  native_enum AgentConversationCommandType {
+    CHAT = "CHAT"
+    CREATE_AGENT = "CREATE_AGENT"
+  }
+
+  native_enum AgentConversationKind {
+    RECORD = "RECORD"
+    BUILDER = "BUILDER"
+  }
+
+  native_enum AgentConversationShareScope {
+    WORKSPACE_LINK = "WORKSPACE_LINK"
+  }
+
+  native_enum AgentConversationSubmissionStatus {
+    PENDING = "PENDING"
+    SENDING = "SENDING"
+    ACCEPTED = "ACCEPTED"
+    FAILED = "FAILED"
+    CANCELLED = "CANCELLED"
+  }
+
+  native_enum AgentDefinitionStatus {
+    DRAFT = "DRAFT"
+    DEPLOYING = "DEPLOYING"
+    LIVE = "LIVE"
+    PAUSED = "PAUSED"
+    ARCHIVED = "ARCHIVED"
+    DELETED = "DELETED"
+  }
+
+  native_enum AgentResponseRating {
+    UP = "UP"
+    DOWN = "DOWN"
+  }
+
+  native_enum AgentRunStatus {
+    QUEUED = "QUEUED"
+    RUNNING = "RUNNING"
+    WAITING_FOR_APPROVAL = "WAITING_FOR_APPROVAL"
+    SUCCEEDED = "SUCCEEDED"
+    FAILED = "FAILED"
+    CANCELLED = "CANCELLED"
+  }
+
+  native_enum AgentTriggerType {
+    MANUAL = "MANUAL"
+    SCHEDULE = "SCHEDULE"
+    EVENT = "EVENT"
+    WEBHOOK = "WEBHOOK"
+  }
+
+  native_enum AgentVersionStatus {
+    DRAFT = "DRAFT"
+    VALIDATING = "VALIDATING"
+    READY = "READY"
+    DEPLOYED = "DEPLOYED"
+    REJECTED = "REJECTED"
+  }
+
+  native_enum DealStage {
+    DEMO_BOOKED = "DEMO_BOOKED"
+    QUALIFIED_TO_BUY = "QUALIFIED_TO_BUY"
+    UNQUALIFIED_TO_BUY = "UNQUALIFIED_TO_BUY"
+    DECISION_MAKER_BOUGHT_IN = "DECISION_MAKER_BOUGHT_IN"
+    CONTRACT_SENT = "CONTRACT_SENT"
+    CLOSED_WON = "CLOSED_WON"
+    CLOSED_LOST = "CLOSED_LOST"
+  }
+
+  native_enum DomainScope {
+    SITE_AND_SUBDOMAINS = "SITE_AND_SUBDOMAINS"
+    EXACT_HOST = "EXACT_HOST"
+  }
+
+  native_enum EmailDirection {
+    INBOUND = "INBOUND"
+    OUTBOUND = "OUTBOUND"
+  }
+
+  native_enum EnrichmentStatus {
+    PENDING = "PENDING"
+    RUNNING = "RUNNING"
+    COMPLETE = "COMPLETE"
+    FAILED = "FAILED"
+    SKIPPED = "SKIPPED"
+  }
+
+  native_enum FactBand {
+    VERIFIED = "VERIFIED"
+    PROBABLE = "PROBABLE"
+    POSSIBLE = "POSSIBLE"
+  }
+
+  native_enum FactStatus {
+    APPLIED = "APPLIED"
+    PROPOSED = "PROPOSED"
+    DISMISSED = "DISMISSED"
+    SUPERSEDED = "SUPERSEDED"
+  }
+
+  native_enum FieldEntity {
+    COMPANY = "COMPANY"
+    CONTACT = "CONTACT"
+    DEAL = "DEAL"
+  }
+
+  native_enum FieldType {
+    TEXT = "TEXT"
+    LONG_TEXT = "LONG_TEXT"
+    NUMBER = "NUMBER"
+    DATE = "DATE"
+    CHECKBOX = "CHECKBOX"
+    SELECT = "SELECT"
+    URL = "URL"
+    EMAIL = "EMAIL"
+    PHONE = "PHONE"
+    USER = "USER"
+  }
+
+  native_enum GoogleSyncStatus {
+    IDLE = "IDLE"
+    RUNNING = "RUNNING"
+    NEEDS_RECONNECT = "NEEDS_RECONNECT"
+    FAILED = "FAILED"
+  }
+
+  native_enum RateSource {
+    FETCHED = "FETCHED"
+    MANUAL = "MANUAL"
+  }
+
+  native_enum RecordSource {
+    MANUAL = "MANUAL"
+    IMPORT = "IMPORT"
+    EMAIL = "EMAIL"
+    CALENDAR = "CALENDAR"
+    TRACKING = "TRACKING"
+  }
+}

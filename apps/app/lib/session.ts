@@ -1,5 +1,5 @@
 import { auth, needsMailboxGrant, type Session } from "@crm/auth";
-import { db } from "@crm/db";
+import service from "../service.mjs";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { cache } from "react";
@@ -19,12 +19,13 @@ export async function requireSession(): Promise<Session> {
 	return session;
 }
 
-export const signInAccounts = cache(async (userId: string) =>
-	db.account.findMany({
-		where: { userId },
-		select: { providerId: true, scope: true },
-	}),
-);
+export const signInAccounts = cache(async (userId: string) => {
+	const { db } = service.load();
+
+	return db.client.orm.public.Account.select("providerId", "scope")
+		.where({ userId })
+		.all();
+});
 
 export async function requireMailboxAccess(): Promise<Session> {
 	const session = await requireSession();
