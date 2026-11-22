@@ -5,7 +5,9 @@ import { defineConfig, env } from "prisma/config";
 
 // Client generation only reads the schema and never opens a database connection.
 // Keep install/build steps independent from runtime database credentials.
-const isClientGeneration = process.argv.some((argument) => argument === "generate");
+const isClientGeneration = process.argv.some(
+	(argument) => argument === "generate",
+);
 const datasourceUrl =
 	process.env.DATABASE_URL ??
 	(isClientGeneration
