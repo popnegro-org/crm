@@ -43,7 +43,7 @@ describe("Vercel CRM dispatch schedule", () => {
     process.env.VERCEL_AUTOMATION_BYPASS_SECRET = "test-protection-bypass";
 
     const calls: Array<{ url: string; init?: RequestInit }> = [];
-    globalThis.fetch = (async (input, init) => {
+    globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
       calls.push({ url: String(input), init });
       return new Response(null, { status: 202 });
     }) as typeof fetch;
