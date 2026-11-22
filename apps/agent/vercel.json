@@ -1,3 +1,20 @@
 {
-  "buildCommand": "bash scripts/vercel-preview-build.sh"
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "bash scripts/vercel-preview-build.sh",
+  "schedules": {
+    "crm-dispatch": {
+      "schedule": "*/15 * * * *",
+      "function": "api/dispatch.ts",
+      "timezone": "UTC"
+    }
+  },
+  "functions": {
+    "api/dispatch.ts": {
+      "experimentalTriggers": [
+        {
+          "type": "schedule/v1beta"
+        }
+      ]
+    }
+  }
 }
