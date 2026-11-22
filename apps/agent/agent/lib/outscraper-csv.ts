@@ -90,23 +90,30 @@ export function parseCsv(input: string): OutscraperRow[] {
 			cell += char;
 		}
 	}
-	if (quoted) throw new Error("CSV inválido: hay un campo entrecomillado sin cerrar.");
+	if (quoted) {
+		throw new Error("CSV inválido: hay un campo entrecomillado sin cerrar.");
+	}
 	row.push(cell);
 	if (row.some((part) => part.trim())) rows.push(row);
 	if (rows.length < 2) return [];
 	const headerRow = rows[0];
 	if (!headerRow) return [];
 	const headers = headerRow.map((header) =>
-		header.replace(/^\uFEFF/, "").trim().toLowerCase(),
+		header
+			.replace(/^\uFEFF/, "")
+			.trim()
+			.toLowerCase(),
 	);
 	if (headers.some((header) => !header)) {
 		throw new Error("CSV inválido: hay encabezados vacíos.");
 	}
-	return rows.slice(1).map((cells) =>
-		Object.fromEntries(
-			headers.map((header, index) => [header, cells[index] ?? ""]),
-		),
-	);
+	return rows
+		.slice(1)
+		.map((cells) =>
+			Object.fromEntries(
+				headers.map((header, index) => [header, cells[index] ?? ""]),
+			),
+		);
 }
 
 function scoreLead(
@@ -169,10 +176,7 @@ export function prepareOutscraperLeads(
 	rows: OutscraperRow[],
 	options: { city?: string; limit?: number } = {},
 ): PreparationResult {
-	const limit = Math.min(
-		30,
-		Math.max(1, Math.floor(options.limit ?? 30)),
-	);
+	const limit = Math.min(30, Math.max(1, Math.floor(options.limit ?? 30)));
 	const targetCity = options.city?.trim().toLocaleLowerCase("es") ?? "";
 	const leads: PreparedLead[] = [];
 	const rejected: PreparationResult["rejected"] = [];
@@ -230,8 +234,19 @@ export function prepareOutscraperLeads(
 
 export function toCsv(leads: PreparedLead[]): string {
 	const headers: Array<keyof PreparedLead> = [
-		"name", "domain", "website", "industry", "city", "stateCode", "country",
-		"countryCode", "phone", "email", "description", "source", "leadScore",
+		"name",
+		"domain",
+		"website",
+		"industry",
+		"city",
+		"stateCode",
+		"country",
+		"countryCode",
+		"phone",
+		"email",
+		"description",
+		"source",
+		"leadScore",
 		"scoreReasons",
 	];
 	const escapeCsvCell = (input: string | number | string[]) => {

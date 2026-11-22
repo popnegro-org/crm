@@ -4,7 +4,9 @@ export async function POST(): Promise<Response> {
 	const protectionBypass = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
 
 	if (!deploymentUrl || !bridgeSecret || !protectionBypass) {
-		console.error("CRM schedule is missing its required deployment configuration.");
+		console.error(
+			"CRM schedule is missing its required deployment configuration.",
+		);
 		return Response.json(
 			{ error: "Schedule configuration unavailable." },
 			{ status: 503 },
