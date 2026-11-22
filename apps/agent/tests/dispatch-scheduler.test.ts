@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "bun:test";
-import { POST } from "../../api/dispatch";
+import { POST } from "../api/dispatch";
 
 const envKeys = [
 	"VERCEL_URL",

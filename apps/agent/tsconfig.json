@@ -5,8 +5,17 @@
 		"module": "preserve",
 		"moduleResolution": "bundler",
 		"allowImportingTsExtensions": true,
-		"types": ["node"]
+		"types": [
+			"node"
+		]
 	},
-	"include": ["agent/**/*.ts", "evals/**/*.ts"],
-	"exclude": ["node_modules", ".eve"]
+	"include": [
+		"agent/**/*.ts",
+		"evals/**/*.ts",
+		"api/**/*.ts"
+	],
+	"exclude": [
+		"node_modules",
+		".eve"
+	]
 }
