@@ -14,6 +14,7 @@ Configure these Worker bindings:
 
 - `AGENT_URL`: HTTPS origin of the target Vercel Preview deployment (no path).
 - `AGENT_BRIDGE_SECRET`: secret matching the Vercel Preview environment variable of the same name.
+- `VERCEL_AUTOMATION_BYPASS_SECRET`: project automation-bypass secret used only to reach the SSO-protected Preview deployment.
 
 The Worker calls `POST /internal/crm/dispatch` with Bearer authentication. The endpoint is protected by constant-time secret comparison and responds `202` after registering the complete dispatch work.
 
