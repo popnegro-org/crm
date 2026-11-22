@@ -1,9 +1,4 @@
-interface Env {
-  AGENT_URL: string;
-  AGENT_BRIDGE_SECRET: string;
-}
-
-async function dispatch(env: Env): Promise<void> {
+async function dispatch(env) {
   const base = new URL(env.AGENT_URL);
   if (base.protocol !== "https:") {
     throw new Error("AGENT_URL must use HTTPS.");
@@ -30,18 +25,14 @@ async function dispatch(env: Env): Promise<void> {
 }
 
 export default {
-  async fetch(request: Request): Promise<Response> {
+  async fetch(request) {
     if (request.method !== "GET" || new URL(request.url).pathname !== "/health") {
       return new Response("Not found", { status: 404 });
     }
     return Response.json({ ok: true, service: "crm-dispatch-scheduler" });
   },
 
-  async scheduled(
-    _controller: ScheduledController,
-    env: Env,
-    context: ExecutionContext,
-  ): Promise<void> {
+  async scheduled(_controller, env, context) {
     context.waitUntil(dispatch(env));
   },
 };
