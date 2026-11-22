@@ -8,6 +8,7 @@ async function dispatch(env) {
     method: "POST",
     headers: {
       authorization: `Bearer ${env.AGENT_BRIDGE_SECRET}`,
+      "x-vercel-protection-bypass": env.VERCEL_AUTOMATION_BYPASS_SECRET,
       "content-type": "application/json",
     },
     signal: AbortSignal.timeout(10_000),
