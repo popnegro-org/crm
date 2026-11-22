@@ -1,4 +1,4 @@
-import { db } from "@crm/db";
+import service from "../../../service.mjs";
 import { connection } from "next/server";
 import {
 	AGENT_URL,
@@ -56,10 +56,12 @@ async function handler(request: Request): Promise<Response> {
 	headers.delete("x-crm-builder-conversation");
 
 	if (requestedSession) {
-		const conversation = await db.agentConversation.findUnique({
-			where: { sessionId: requestedSession },
-			select: { userId: true },
-		});
+		const { db } = service.load();
+		const conversation = await db.client.orm.public.AgentConversation.select(
+			"userId",
+		)
+			.where({ sessionId: requestedSession })
+			.first();
 		if (conversation && conversation.userId !== session.user.id) {
 			return Response.json(
 				{ error: "Conversation not found." },
@@ -69,14 +71,16 @@ async function handler(request: Request): Promise<Response> {
 	}
 
 	if (builderConversationId) {
-		const conversation = await db.agentConversation.findFirst({
-			where: {
+		const { db } = service.load();
+		const conversation = await db.client.orm.public.AgentConversation.select(
+			"sessionId",
+		)
+			.where({
 				id: builderConversationId,
 				userId: session.user.id,
 				kind: "BUILDER",
-			},
-			select: { sessionId: true },
-		});
+			})
+			.first();
 		if (
 			!conversation ||
 			(requestedSession && conversation.sessionId !== requestedSession)

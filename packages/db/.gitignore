@@ -1,2 +1,3 @@
-# Prisma Client is generated from prisma/schema.prisma — never commit it.
-src/generated/
+# The generated Prisma 7 client is committed (like apps/api's generated
+# server): the Prisma 8 CLI has no `generate`, so a fresh install cannot
+# rebuild it for apps/api and apps/agent.

@@ -3,11 +3,17 @@ import "@crm/env/load";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { type Prisma, PrismaClient } from "./generated/prisma/client";
 
-const connectionString =
-	process.env.NODE_ENV === "test" ? testDatabase() : liveDatabase();
+let injectedUrl: string | undefined;
+
+function liveUrl(): string | undefined {
+	if (injectedUrl) return injectedUrl;
+	const url = process.env.DATABASE_URL;
+	if (!url) return undefined;
+	return url;
+}
 
 function liveDatabase(): string {
-	const url = process.env.DATABASE_URL;
+	const url = liveUrl();
 
 	if (!url) {
 		throw new Error(
@@ -16,6 +22,20 @@ function liveDatabase(): string {
 	}
 
 	return url;
+}
+
+function connectionString(): string {
+	return process.env.NODE_ENV === "test" ? testDatabase() : liveDatabase();
+}
+
+/**
+ * Points the classic client at another Postgres — the Compute path calls this
+ * once at boot with the URL its service declaration loaded, since
+ * `DATABASE_URL` is not set there.
+ */
+export function useDatabaseUrl(url: string): void {
+	injectedUrl = url;
+	clientInstance = undefined;
 }
 
 function testDatabase(): string {
@@ -100,7 +120,7 @@ const logDefinitions: Prisma.LogDefinition[] = [
 
 const createPrismaClient = () => {
 	const client = new PrismaClient({
-		adapter: new PrismaPg({ connectionString }),
+		adapter: new PrismaPg({ connectionString: connectionString() }),
 		log: logDefinitions,
 	});
 
@@ -120,14 +140,35 @@ const createPrismaClient = () => {
 	return client;
 };
 
+let clientInstance: PrismaClient | undefined;
+
+const getClient = (): PrismaClient => {
+	clientInstance ??= createPrismaClient();
+	return clientInstance;
+};
+
 declare global {
-	var prisma: ReturnType<typeof createPrismaClient> | undefined;
+	var prisma: PrismaClient | undefined;
 }
 
-export const db = globalThis.prisma ?? createPrismaClient();
+const lazyClient = new Proxy({} as PrismaClient, {
+	get(_target, property, receiver) {
+		const client = getClient();
+		const value = Reflect.get(client as unknown as object, property, receiver);
+		return typeof value === "function" ? value.bind(client) : value;
+	},
+	has(_target, property) {
+		return property in (getClient() as unknown as object);
+	},
+	getPrototypeOf() {
+		return PrismaClient.prototype;
+	},
+});
+
+export const db: PrismaClient = globalThis.prisma ?? lazyClient;
 
 if (process.env.NODE_ENV !== "production") {
 	globalThis.prisma = db;
 }
 
-export type Db = typeof db;
+export type Db = PrismaClient;
