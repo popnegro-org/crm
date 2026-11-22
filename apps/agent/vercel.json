@@ -4,7 +4,7 @@
   "schedules": {
     "crm-dispatch": {
       "schedule": "*/15 * * * *",
-      "function": "api/dispatch.ts",
+      "function": "api/dispatch",
       "timezone": "UTC"
     }
   },
