@@ -123,10 +123,7 @@ interface LeadScore {
 	reasons: string[];
 }
 
-function scoreLead(
-	row: OutscraperRow,
-	domain: string,
-): LeadScore {
+function scoreLead(row: OutscraperRow, domain: string): LeadScore {
 	const reasons: string[] = [];
 	let score = 0;
 	if (domain) {
@@ -258,7 +255,7 @@ export function toCsv(leads: PreparedLead[]): string {
 	];
 	const escapeCsvCell = (input: string | number | string[]) => {
 		const text = Array.isArray(input) ? input.join("; ") : String(input);
-		const safeText = /^[\t\r ]*[=+\-@]/.test(text) ? "'" + text : text;
+		const safeText = /^[\t\r ]*[=+\-@]/.test(text) ? `'${text}` : text;
 		return /[",\r\n]/.test(safeText)
 			? `"${safeText.replace(/"/g, '""')}"`
 			: safeText;
