@@ -44,7 +44,7 @@ async function invokeSchedule(): Promise<Promise<unknown>[]> {
 describe("Preview CRM dispatch schedule", () => {
 	it("uses the supported 15-minute UTC cadence", () => {
 		expect(schedule.cron).toBe("*/15 * * * *");
-		expect(schedule.timezone).toBe("UTC");
+		expect(schedule).not.toHaveProperty("timezone");
 	});
 
 	it("fails closed when deployment credentials are missing", async () => {
