@@ -7,6 +7,6 @@
 		"allowImportingTsExtensions": true,
 		"types": ["node"]
 	},
-	"include": ["agent/**/*.ts", "evals/**/*.ts", "api/**/*.ts"],
+	"include": ["agent/**/*.ts", "evals/**/*.ts"],
 	"exclude": ["node_modules", ".eve"]
 }
