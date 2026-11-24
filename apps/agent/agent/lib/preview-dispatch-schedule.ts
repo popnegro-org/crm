@@ -2,7 +2,6 @@ import { defineSchedule } from "eve/schedules";
 
 export default defineSchedule({
 	cron: "*/15 * * * *",
-	timezone: "UTC",
 	run({ waitUntil }) {
 		const deploymentUrl = process.env.VERCEL_URL;
 		const bridgeSecret = process.env.AGENT_BRIDGE_SECRET;
