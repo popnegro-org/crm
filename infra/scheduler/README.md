@@ -1,26 +1,26 @@
 # CRM dispatch scheduler
 
-The CRM's periodic dispatch uses a private Vercel Function and Vercel Schedules.
+The CRM dispatch uses Eve's native schedule compiler and a private Vercel schedule function.
 
 ## Preview-only execution
 
-The Preview build script adds the static schedule to `.vercel/output/config.json` only when `VERCEL_GIT_COMMIT_REF=fix/cloudflare-minute-dispatch`. Production builds do not receive a schedule from this change.
+The Preview build script copies the typed schedule definition into Eve's authored schedule directory only when `VERCEL_GIT_COMMIT_REF=fix/cloudflare-minute-dispatch`. Eve compiles and packages the private function into `.vercel/output`; the build script removes the temporary source file after the build. Production builds never receive this schedule definition.
 
-- Schedule: `crm-dispatch`
+- Schedule: `eve.dispatch`
 - Cadence: every 15 minutes, UTC
-- Target: private function `api/dispatch`
-- The private function calls the authenticated `POST /internal/crm/dispatch` route inside the same Preview deployment.
-- Vercel-hosted automation-bypass and branch-scoped bridge credentials remain inside Vercel.
+- Target: Eve-generated private schedule function
+- The function calls the authenticated `POST /internal/crm/dispatch` route inside the same Preview deployment.
+- The Vercel automation-bypass and branch-scoped bridge credentials remain inside Vercel.
 
 The dispatch route performs the blank-fact sweep, stale-task reconciliation, task draining, due-agent scheduling, builder submission dispatch, and queued agent-run dispatch.
 
 ## Plan limits
 
-Vercel Schedules is in public beta on all plans. Hobby includes 5,000 runs/month; a 15-minute schedule uses approximately 2,880 runs/month. Hobby applies a 15-minute jitter window, so this is not a strict one-minute or exact-minute SLA.
+Vercel Hobby schedules have a minimum cadence of 15 minutes and a jitter window. This is not a strict one-minute or exact-minute SLA.
 
 ## Deployment safety
 
-- The schedule is injected into the Preview build only.
-- Preview database and `AGENT_BRIDGE_SECRET` are branch-scoped.
+- The schedule source is added to Eve's build only for the dedicated Preview branch.
+- Preview database and dispatch credentials are branch-scoped.
 - SSO remains enabled.
 - Production scheduling is not enabled by this change.
