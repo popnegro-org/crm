@@ -29,9 +29,7 @@ async function invokeSchedule(): Promise<Promise<unknown>[]> {
 	const pending: Promise<unknown>[] = [];
 	await schedule.run({
 		to: (() => {
-			throw new Error(
-				"The dispatch schedule must not send channel messages.",
-			);
+			throw new Error("The dispatch schedule must not send channel messages.");
 		}) as never,
 		waitUntil(task) {
 			pending.push(task);

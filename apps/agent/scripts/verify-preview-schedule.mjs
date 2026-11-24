@@ -7,7 +7,9 @@ const config = JSON.parse(await readFile(configPath, "utf8"));
 const serialized = JSON.stringify(config);
 
 if (!serialized.includes("eve.dispatch")) {
-	throw new Error("Eve did not register the expected private schedule eve.dispatch.");
+	throw new Error(
+		"Eve did not register the expected private schedule eve.dispatch.",
+	);
 }
 if (!serialized.includes("*/15 * * * *")) {
 	throw new Error("Eve did not register the expected 15-minute UTC cadence.");
@@ -29,9 +31,13 @@ async function findFunctionConfigs(directory) {
 	return found;
 }
 
-const functionConfigs = await findFunctionConfigs(join(outputRoot, "functions"));
+const functionConfigs = await findFunctionConfigs(
+	join(outputRoot, "functions"),
+);
 if (functionConfigs.length === 0) {
 	throw new Error("Eve Build Output contains no packaged Vercel Functions.");
 }
 
-console.log("Verified Eve Preview schedule eve.dispatch and packaged Vercel Functions.");
+console.log(
+	"Verified Eve Preview schedule eve.dispatch and packaged Vercel Functions.",
+);
