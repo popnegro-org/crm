@@ -1,9 +1,9 @@
 import { describe, expect, test } from "bun:test";
 import {
+	type OutscraperRow,
 	parseCsv,
 	prepareOutscraperLeads,
 	toCsv,
-	type OutscraperRow,
 } from "../agent/lib/outscraper-csv";
 
 describe("Outscraper CSV preparation", () => {
@@ -85,6 +85,7 @@ describe("Outscraper CSV preparation", () => {
 		expect(result.duplicates[1]?.key).toBe("domain:uno.example.com");
 		expect(result.duplicates[2]?.key).toBe("name:consultora");
 	});
+
 	test("never emits more than 30 leads", () => {
 		const rows = Array.from({ length: 31 }, (_, i) => ({
 			name: `Negocio ${i}`,
