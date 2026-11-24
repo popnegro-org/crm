@@ -5,6 +5,7 @@ import { schemas } from "@crm/validation";
 import { eveTurnFailure } from "@crm/validation/eve-stream";
 import { defineChannel, GET, POST } from "eve/channels";
 import { z } from "zod";
+import { sweepBlankFacts } from "../lib/blank-facts";
 import { persistBuilderInputRequest } from "../lib/builder-input";
 import { verifyKey } from "../lib/context-dev";
 import {
@@ -16,6 +17,7 @@ import {
 	drainAgentRuns,
 	drainBuilder,
 	failRun,
+	queueDueAgentRuns,
 	runIdFromToken,
 	runToken,
 } from "../lib/custom-agent-dispatch";
@@ -137,16 +139,20 @@ export default defineChannel({
 			}
 
 			waitUntil(
-				(async () => {
-					await reconcileStaleTasks();
-					await drainAll((task) =>
-						send(brief(task), {
-							auth: taskAuth(task),
-							continuationToken: taskToken(task.id),
-						}),
-					);
-					await drainAgentRuns(send);
-				})(),
+				Promise.all([
+					sweepBlankFacts(),
+					(async () => {
+						await reconcileStaleTasks();
+						await drainAll((task) =>
+							send(brief(task), {
+								auth: taskAuth(task),
+								continuationToken: taskToken(task.id),
+							}),
+						);
+						await queueDueAgentRuns();
+						await Promise.all([drainBuilder(send), drainAgentRuns(send)]);
+					})(),
+				]),
 			);
 
 			return new Response(null, { status: 202 });

@@ -22,7 +22,7 @@ export type PreparationResult = {
 	duplicates: Array<{ row: number; key: string }>;
 };
 
-const aliases: Record<string, string[]> = {
+const aliases = {
 	name: ["name", "business_name", "company", "title"],
 	website: ["site", "website", "url", "website_url"],
 	industry: ["category", "type", "industry"],
@@ -36,10 +36,12 @@ const aliases: Record<string, string[]> = {
 	rating: ["rating", "reviews_rating"],
 	reviews: ["reviews", "reviews_count", "review_count"],
 	address: ["full_address", "address", "street"],
-};
+} satisfies Record<string, readonly string[]>;
+
+const aliasMap = new Map(Object.entries(aliases));
 
 function value(row: OutscraperRow, field: string): string {
-	for (const key of aliases[field] ?? [field]) {
+	for (const key of aliasMap.get(field) ?? [field]) {
 		const found = Object.entries(row).find(
 			([header]) => header.trim().toLowerCase() === key,
 		);
@@ -90,29 +92,38 @@ export function parseCsv(input: string): OutscraperRow[] {
 			cell += char;
 		}
 	}
-	if (quoted) throw new Error("CSV inválido: hay un campo entrecomillado sin cerrar.");
+	if (quoted) {
+		throw new Error("CSV inválido: hay un campo entrecomillado sin cerrar.");
+	}
 	row.push(cell);
 	if (row.some((part) => part.trim())) rows.push(row);
 	if (rows.length < 2) return [];
 	const headerRow = rows[0];
 	if (!headerRow) return [];
 	const headers = headerRow.map((header) =>
-		header.replace(/^\uFEFF/, "").trim().toLowerCase(),
+		header
+			.replace(/^\uFEFF/, "")
+			.trim()
+			.toLowerCase(),
 	);
 	if (headers.some((header) => !header)) {
 		throw new Error("CSV inválido: hay encabezados vacíos.");
 	}
-	return rows.slice(1).map((cells) =>
-		Object.fromEntries(
-			headers.map((header, index) => [header, cells[index] ?? ""]),
-		),
-	);
+	return rows
+		.slice(1)
+		.map((cells) =>
+			Object.fromEntries(
+				headers.map((header, index) => [header, cells[index] ?? ""]),
+			),
+		);
 }
 
-function scoreLead(
-	row: OutscraperRow,
-	domain: string,
-): { score: number; reasons: string[] } {
+interface LeadScore {
+	score: number;
+	reasons: string[];
+}
+
+function scoreLead(row: OutscraperRow, domain: string): LeadScore {
 	const reasons: string[] = [];
 	let score = 0;
 	if (domain) {
@@ -169,10 +180,7 @@ export function prepareOutscraperLeads(
 	rows: OutscraperRow[],
 	options: { city?: string; limit?: number } = {},
 ): PreparationResult {
-	const limit = Math.min(
-		30,
-		Math.max(1, Math.floor(options.limit ?? 30)),
-	);
+	const limit = Math.min(30, Math.max(1, Math.floor(options.limit ?? 30)));
 	const targetCity = options.city?.trim().toLocaleLowerCase("es") ?? "";
 	const leads: PreparedLead[] = [];
 	const rejected: PreparationResult["rejected"] = [];
@@ -230,24 +238,32 @@ export function prepareOutscraperLeads(
 
 export function toCsv(leads: PreparedLead[]): string {
 	const headers: Array<keyof PreparedLead> = [
-		"name", "domain", "website", "industry", "city", "stateCode", "country",
-		"countryCode", "phone", "email", "description", "source", "leadScore",
+		"name",
+		"domain",
+		"website",
+		"industry",
+		"city",
+		"stateCode",
+		"country",
+		"countryCode",
+		"phone",
+		"email",
+		"description",
+		"source",
+		"leadScore",
 		"scoreReasons",
 	];
-	const escape = (input: string | number | string[]) => {
+	const escapeCsvCell = (input: string | number | string[]) => {
 		const text = Array.isArray(input) ? input.join("; ") : String(input);
-		const safeText =
-			typeof input === "string" && /^[\t\r ]*[=+\-@]/.test(text)
-				? "'" + text
-				: text;
+		const safeText = /^[\t\r ]*[=+\-@]/.test(text) ? `'${text}` : text;
 		return /[",\r\n]/.test(safeText)
-			? '"' + safeText.replace(/"/g, '""') + '"'
+			? `"${safeText.replace(/"/g, '""')}"`
 			: safeText;
 	};
 	return [
 		headers.join(","),
 		...leads.map((lead) =>
-			headers.map((header) => escape(lead[header])).join(","),
+			headers.map((header) => escapeCsvCell(lead[header])).join(","),
 		),
 	].join("\n");
 }
