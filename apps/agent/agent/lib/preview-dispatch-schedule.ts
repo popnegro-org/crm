@@ -9,7 +9,9 @@ export default defineSchedule({
 		const protectionBypass = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
 
 		if (!deploymentUrl || !bridgeSecret || !protectionBypass) {
-			throw new Error("CRM schedule is missing its required deployment configuration.");
+			throw new Error(
+				"CRM schedule is missing its required deployment configuration.",
+			);
 		}
 
 		waitUntil(
