@@ -1,9 +1,4 @@
 {
 	"$schema": "https://openapi.vercel.sh/vercel.json",
-	"buildCommand": "bash scripts/vercel-preview-build.sh",
-	"functions": {
-		"api/dispatch.ts": {
-			"experimentalTriggers": [{ "type": "schedule/v1beta" }]
-		}
-	}
+	"buildCommand": "bash scripts/vercel-preview-build.sh"
 }
