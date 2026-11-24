@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "bun:test";
-import { POST } from "../api/dispatch";
+import schedule from "../agent/lib/preview-dispatch-schedule";
 
 const envKeys = [
 	"VERCEL_URL",
@@ -25,16 +25,32 @@ afterEach(() => {
 	}
 });
 
-describe("Vercel CRM dispatch schedule", () => {
+async function invokeSchedule(): Promise<Promise<unknown>[]> {
+	const pending: Promise<unknown>[] = [];
+	await schedule.run({
+		to: (() => {
+			throw new Error("The dispatch schedule must not send channel messages.");
+		}) as never,
+		waitUntil(task) {
+			pending.push(task);
+		},
+		appAuth: {} as never,
+	});
+	return pending;
+}
+
+describe("Preview CRM dispatch schedule", () => {
+	it("uses the supported 15-minute UTC cadence", () => {
+		expect(schedule.cron).toBe("*/15 * * * *");
+		expect(schedule.timezone).toBe("UTC");
+	});
+
 	it("fails closed when deployment credentials are missing", async () => {
 		for (const key of envKeys) delete process.env[key];
 
-		const response = await POST();
-
-		expect(response.status).toBe(503);
-		expect(await response.json()).toEqual({
-			error: "Schedule configuration unavailable.",
-		});
+		await expect(invokeSchedule()).rejects.toThrow(
+			"CRM schedule is missing its required deployment configuration.",
+		);
 	});
 
 	it("forwards an authenticated request to the current deployment", async () => {
@@ -51,9 +67,9 @@ describe("Vercel CRM dispatch schedule", () => {
 			return new Response(null, { status: 202 });
 		}) as typeof fetch;
 
-		const response = await POST();
+		const pending = await invokeSchedule();
+		await Promise.all(pending);
 
-		expect(response.status).toBe(200);
 		expect(calls).toHaveLength(1);
 		expect(calls[0]?.url).toBe(
 			"https://crm-agent-preview.example.vercel.app/internal/crm/dispatch",
@@ -66,7 +82,7 @@ describe("Vercel CRM dispatch schedule", () => {
 		);
 	});
 
-	it("returns a gateway error when the internal dispatcher rejects", async () => {
+	it("fails the scheduled invocation when the dispatcher rejects", async () => {
 		process.env.VERCEL_URL = "crm-agent-preview.example.vercel.app";
 		process.env.AGENT_BRIDGE_SECRET = "test-bridge-secret";
 		process.env.VERCEL_AUTOMATION_BYPASS_SECRET = "test-protection-bypass";
@@ -74,11 +90,9 @@ describe("Vercel CRM dispatch schedule", () => {
 		globalThis.fetch = (async () =>
 			new Response("Unauthorized", { status: 401 })) as typeof fetch;
 
-		const response = await POST();
-
-		expect(response.status).toBe(502);
-		expect(await response.json()).toEqual({
-			error: "CRM dispatch failed.",
-		});
+		const pending = await invokeSchedule();
+		await expect(Promise.all(pending)).rejects.toThrow(
+			"CRM dispatch rejected the scheduled invocation (401): Unauthorized",
+		);
 	});
 });
