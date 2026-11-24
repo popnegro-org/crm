@@ -22,7 +22,7 @@ export type PreparationResult = {
 	duplicates: Array<{ row: number; key: string }>;
 };
 
-const aliases: Record<string, string[]> = {
+const aliases = {
 	name: ["name", "business_name", "company", "title"],
 	website: ["site", "website", "url", "website_url"],
 	industry: ["category", "type", "industry"],
@@ -36,10 +36,12 @@ const aliases: Record<string, string[]> = {
 	rating: ["rating", "reviews_rating"],
 	reviews: ["reviews", "reviews_count", "review_count"],
 	address: ["full_address", "address", "street"],
-};
+} satisfies Record<string, readonly string[]>;
+
+const aliasMap = new Map(Object.entries(aliases));
 
 function value(row: OutscraperRow, field: string): string {
-	for (const key of aliases[field] ?? [field]) {
+	for (const key of aliasMap.get(field) ?? [field]) {
 		const found = Object.entries(row).find(
 			([header]) => header.trim().toLowerCase() === key,
 		);
@@ -116,10 +118,15 @@ export function parseCsv(input: string): OutscraperRow[] {
 		);
 }
 
+interface LeadScore {
+	score: number;
+	reasons: string[];
+}
+
 function scoreLead(
 	row: OutscraperRow,
 	domain: string,
-): { score: number; reasons: string[] } {
+): LeadScore {
 	const reasons: string[] = [];
 	let score = 0;
 	if (domain) {
@@ -251,10 +258,7 @@ export function toCsv(leads: PreparedLead[]): string {
 	];
 	const escapeCsvCell = (input: string | number | string[]) => {
 		const text = Array.isArray(input) ? input.join("; ") : String(input);
-		const safeText =
-			typeof input === "string" && /^[\t\r ]*[=+\-@]/.test(text)
-				? `'${text}`
-				: text;
+		const safeText = /^[\t\r ]*[=+\-@]/.test(text) ? "'" + text : text;
 		return /[",\r\n]/.test(safeText)
 			? `"${safeText.replace(/"/g, '""')}"`
 			: safeText;
